@@ -17,11 +17,15 @@ public final class SessionFactory {
 
 	public Session getSession(Class<?> clazz){
 		Session session = new Session(clazz,configuration);
-		Connection connection = JdbcConnection.getConnection();
+		Connection connection = JdbcConnection.getConnection(configuration.getOption());
 		session.setConnection(connection);
 		return session;
 	}
-	
+
+	public Configuration getConfiguration() {
+		return configuration;
+	}
+
 	public Session getCurrentSession(Class<?> clazz){
 		Session session = local.get();
 		if(session == null){
@@ -29,7 +33,7 @@ public final class SessionFactory {
 			session.setCurrent(true);	
 		}
 		local.set(session);
-		Connection connection = JdbcConnection.getConnection(); //这里已经修改为数据库连接池
+		Connection connection = JdbcConnection.getConnection(configuration.getOption()); //这里已经修改为数据库连接池
 		session.setConnection(connection);
 		session.setClazz(clazz);
 		session.setConfiguration(configuration);

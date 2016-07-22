@@ -1,13 +1,9 @@
 package com.lwy.myselect.entity;
 
-import com.lwy.myselect.annotation.Delete;
-import com.lwy.myselect.annotation.Insert;
-import com.lwy.myselect.annotation.Select;
-import com.lwy.myselect.annotation.Table;
-import com.lwy.myselect.annotation.Update;
+import com.lwy.myselect.annotation.*;
 
 //String的名字作为id表示符号 ，将来在注解上可以少使用一个属性，而且反射查找减少遍历，将来在注解上添加其他功能
-@Table(alias = "entity", value = "entity")
+@SQL(value = "entity")
 public class EntitySqlMapper {
 	
 	@Insert(returns = "int")

@@ -1,28 +1,33 @@
 package com.lwy.myselect.pool;
 
+import com.lwy.myselect.datasource.Option;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Properties;
+
+import static java.lang.System.getProperties;
 
 
 public class CustomConnectionPool extends ConnectionPool {
 	
-	public CustomConnectionPool(String name){
+	public CustomConnectionPool(Option option){
 		new DefaultConnectionPool();
-		configCustomProperty(name);
+		configCustomProperty(option);
 	}
 	
-	private void configCustomProperty(String name){
-		Map<String,String> optionMap = ParseConfiguration.dataSourceMap.get(name);
+	private void configCustomProperty(Option option){
 		try {
 			Class<?> clazz = Class.forName(cpds.getClass().getName());
 			//因为cpds继承自AbstractComboPooledDataSource，所有的set方法都在其中，所以不能用getDeclaredMethods
 			Method[] methods = clazz.getMethods();
-			Iterator<String> iterator = optionMap.keySet().iterator();
+			Properties properties = option.getProperties();
+			Iterator<Object> iterator = properties.keySet().iterator();
 			while(iterator.hasNext()){
-				String propertyName = iterator.next();
-				String value = optionMap.get(propertyName);
+				String propertyName = (String) iterator.next();
+				String value = (String) properties.get(propertyName);
 				for(Method m:methods){
 					if(("set"+propertyName).equalsIgnoreCase(m.getName())){
 						String type = m.getParameters()[0].getType().getName();

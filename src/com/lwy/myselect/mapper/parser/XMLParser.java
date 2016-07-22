@@ -66,24 +66,21 @@ public class XMLParser {
                 Element dataSource = (Element) dataSourceList.item(0);
                 NodeList options = dataSource.getElementsByTagName("option");
                 if(options != null && options.getLength()>0){
-                    int optionLen = options.getLength();
-                    for(int i=0;i<optionLen;i++){
-                        Element option = (Element) options.item(i);
-                        String name = option.getAttribute("name");
-                        Option op = new Option(name);
-                        NodeList properties = option.getChildNodes();
-                        int propertyNum = properties.getLength();
-                        for(int j=0;j<propertyNum;j++){
-                            Node node = properties.item(j);
-                            if( node instanceof Element){
-                                Element property = (Element) node;
-                                String propertyName = property.getAttribute("name");
-                                String value = property.getTextContent();
-                                op.registerOption(propertyName,value);
-                            }
+                    Element option = (Element) options.item(0);
+                    String name = option.getAttribute("name");
+                    Option op = new Option(name);
+                    NodeList properties = option.getChildNodes();
+                    int propertyNum = properties.getLength();
+                    for(int j=0;j<propertyNum;j++){
+                        Node node = properties.item(j);
+                        if( node instanceof Element){
+                            Element property = (Element) node;
+                            String propertyName = property.getAttribute("name");
+                            String value = property.getTextContent();
+                            op.registerOption(propertyName,value);
                         }
-                        configuration.registerOption(op);
                     }
+                    configuration.registerOption(op);
                 }
             }
 
@@ -314,8 +311,8 @@ public class XMLParser {
                         try{
                             Class<?> sqlClass = Class.forName(sqlClassName);
                             Object sqlMapperInstance = sqlClass.newInstance();
-                            Table tableAnnotation = sqlClass.getDeclaredAnnotation(Table.class);
-                            if(tableAnnotation != null){
+                            SQL sqlAnnotation = sqlClass.getDeclaredAnnotation(SQL.class);
+                            if(sqlAnnotation != null){
                                 String sqlStatement;
                                 String sqlName;
                                 String returnAlias = null;

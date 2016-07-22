@@ -17,15 +17,16 @@ public class Test {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		Configuration configuration = XMLParser.parse();
-//		insert();
-//		delete();
-//		update();
-//		select();
-		concurrentSelect();
-//		transactionTest();
+		SessionFactory sf = new SessionFactory(configuration);
+//		insert(sf);
+//		delete(sf);
+//		update(sf);
+		select(sf);
+//		concurrentSelect(sf);
+//		transactionTest(sf);
 	}
 
-	private static void insert() {
+	private static void insert(SessionFactory sf) {
 		Entity e = new Entity();
 		e.setDate(new Date());
 		e.setDou(95.9);
@@ -33,23 +34,20 @@ public class Test {
 //		e.setInte(8);
 		e.setLon(908);
 		e.setStr("bbb");
-		SessionFactory sh = new SessionFactory();
-		Session session = sh.getSession(Entity.class);
+		Session session = sf.getSession(Entity.class);
 		session.insert("insertEntity", e);
 	}
 	
-	private static void delete(){
-		SessionFactory sh = new SessionFactory();
-		Session session = sh.getSession(Entity.class);
+	private static void delete(SessionFactory sf){
+		Session session = sf.getSession(Entity.class);
 		Entity e = new Entity();
 		e.setInte(5);
 		session.delete("deleteEntity", e);
-		sh.closeSession(session);
+		sf.closeSession(session);
 	}
 	
-	private static void update(){
-		SessionFactory sh = new SessionFactory();
-		Session session = sh.getSession(Entity.class);
+	private static void update(SessionFactory sf){
+		Session session = sf.getSession(Entity.class);
 		Entity e = new Entity();
 		e.setInte(5);
 		e.setDou(6.77);
@@ -57,9 +55,8 @@ public class Test {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private static void select(){
-		SessionFactory sh = new SessionFactory();
-		Session session1 = sh.getCurrentSession(Entity.class);
+	private static void select(SessionFactory sf){
+		Session session1 = sf.getCurrentSession(Entity.class);
 		System.out.println(session1.hashCode()+"      "+session1.getConnection().hashCode());
 		Entity e = new Entity();
 		e.setInte(5);
@@ -67,38 +64,38 @@ public class Test {
 		for(int i=0;i<list.size();i++){
 			System.out.println(list.get(i));
 		}
-		sh.closeSession(session1);
+		sf.closeSession(session1);
 		System.out.println("==================");
-		Session session2 = sh.getCurrentSession(Entity.class);
+		Session session2 = sf.getCurrentSession(Entity.class);
 		System.out.println(session2.hashCode()+"      "+session2.getConnection().hashCode());
 		List<Object> list2 = (List<Object>) session2.select("selectEntity", e);
 		for(int i=0;i<list2.size();i++){
 			System.out.println(list2.get(i));
 		}
-		sh.closeSession(session2);
+		sf.closeSession(session2);
 		System.out.println("==================");
-		Session session3 = sh.getCurrentSession(Entity.class);
+		Session session3 = sf.getCurrentSession(Entity.class);
 		System.out.println(session3.hashCode()+"      "+session3.getConnection().hashCode());
 		long count = (long) session3.select("selectCountEntity", e);
 		System.out.println(count);
-		sh.closeSession(session3);
+		sf.closeSession(session3);
 		System.out.println("==================");
-		Session session4 = sh.getCurrentSession(Entity.class);
+		Session session4 = sf.getCurrentSession(Entity.class);
 		System.out.println(session4.hashCode()+"      "+session4.getConnection().hashCode());
 		long count2 = (long) session4.select("selectCountSpecialEntity", e);
 		System.out.println(count2);
-		sh.closeSession(session4);
+		sf.closeSession(session4);
 	}
 	
-	private static void concurrentSelect(){
+	private static void concurrentSelect(SessionFactory sf){
 		ExecutorService exec = Executors.newCachedThreadPool();
 		for(int i=0;i<4;i++){
-			exec.execute(new MultiThread(i+1));
+			exec.execute(new MultiThread(i+1,sf));
 		}
 		exec.shutdown();
 	}
 	
-	private static void transactionTest(){
+	private static void transactionTest(SessionFactory sf){
 		Entity e1 = new Entity();
 		e1.setDate(new Date());
 		e1.setDou(20.2);
@@ -121,7 +118,7 @@ public class Test {
 		list.add(e1);
 		list.add(e2);
 		list.add(e3);
-		Session session = new SessionFactory().getCurrentSession(Entity.class);
+		Session session = sf.getCurrentSession(Entity.class);
 		session.openTransaction();
 		session.insert("insertEntity", list);
 		session.commit();

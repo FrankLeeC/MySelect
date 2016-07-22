@@ -4,16 +4,18 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Map;
 
+import com.lwy.myselect.datasource.Option;
 import com.lwy.myselect.pool.ConnectionPool;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 
 
 public class JdbcConnection {
 	
-	public static synchronized Connection getConnection(){
+	public static synchronized Connection getConnection(Option option){
 		
-		ComboPooledDataSource cpds = new ConnectionPool().build().getConnectionPool("first");
+		ComboPooledDataSource cpds = new ConnectionPool().build().getConnectionPool(option);
 		Connection con = null;
 		try {
 			con = cpds.getConnection();

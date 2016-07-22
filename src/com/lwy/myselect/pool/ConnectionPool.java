@@ -2,7 +2,9 @@ package com.lwy.myselect.pool;
 
 import java.beans.PropertyVetoException;
 
+import com.lwy.myselect.datasource.Option;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
+
 
 public class ConnectionPool {
 	protected static ComboPooledDataSource cpds = null;
@@ -25,8 +27,8 @@ public class ConnectionPool {
 		return cpds;
 	}
 	
-	public ComboPooledDataSource getConnectionPool(String name){
-		new CustomConnectionPool(name);
+	public ComboPooledDataSource getConnectionPool(Option option){
+		new CustomConnectionPool(option);
 		return cpds;
 	}
 }

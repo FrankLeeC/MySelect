@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Created by frank lee on 2016/7/20.
  */
 public class Configuration {
-    private Map<String,Option> options = new ConcurrentHashMap<>();
+    private Option option;
     private Map<String,EntityMapper> entityMappers = new ConcurrentHashMap<>();
     private Map<String,String> aliases = new ConcurrentHashMap<>();
     private static Map<String,Class<?>> classTypes = new HashMap<>();
@@ -46,7 +46,7 @@ public class Configuration {
     }
 
     public void registerOption(Option option){
-        options.put(option.getName(),option);
+        this.option = option;
     }
 
     public void registerEntity(String name,EntityMapper mapper){
@@ -65,8 +65,8 @@ public class Configuration {
         return aliases.get(alias);
     }
 
-    public Option getOption(String name){
-        return options.get(name);
+    public Option getOption(){
+        return option;
     }
 
     public Class<?> getClass(String name){

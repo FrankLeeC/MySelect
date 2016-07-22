@@ -1,6 +1,8 @@
 package com.lwy.myselect.datasource;
 
 import java.util.Properties;
+import java.util.Set;
+
 
 /** DataSource option
  * 数据源配置
@@ -21,4 +23,9 @@ public class Option {
     public void registerOption(String name,String value){
         properties.put(name,value);
     }
+
+    public Properties getProperties(){
+        return properties;
+    }
+
 }
