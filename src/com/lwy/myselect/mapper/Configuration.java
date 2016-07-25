@@ -1,8 +1,13 @@
 package com.lwy.myselect.mapper;
 
+import com.lwy.myselect.cache.CacheManager;
+import com.lwy.myselect.cache.SessionFactoryCacheManager;
 import com.lwy.myselect.datasource.Option;
+import com.lwy.myselect.entity.Entity;
 
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -71,5 +76,16 @@ public class Configuration {
 
     public Class<?> getClass(String name){
         return classTypes.get(name);
+    }
+
+    public CacheManager createCacheManager(){
+        CacheManager cacheManager = new SessionFactoryCacheManager();
+        Collection<EntityMapper> entityMapperCollection = entityMappers.values();
+        Iterator<EntityMapper> iterator = entityMapperCollection.iterator();
+        while(iterator.hasNext()){
+            EntityMapper mapper = iterator.next();
+            cacheManager.registerStrategy(mapper.getClassName(),mapper.getStrategy());
+        }
+        return cacheManager;
     }
 }

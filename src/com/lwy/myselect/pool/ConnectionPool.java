@@ -12,10 +12,10 @@ public class ConnectionPool {
 	public ConnectionPool build(){
 		try {
 			cpds = new ComboPooledDataSource();
-			cpds.setDriverClass(JdbcLoader.getDriver());
-			cpds.setJdbcUrl(JdbcLoader.getUrl());
-			cpds.setUser(JdbcLoader.getUser());
-			cpds.setPassword(JdbcLoader.getPassword());
+			cpds.setDriverClass(DataBaseProperty.getDriver());
+			cpds.setJdbcUrl(DataBaseProperty.getUrl());
+			cpds.setUser(DataBaseProperty.getUser());
+			cpds.setPassword(DataBaseProperty.getPassword());
 		} catch (PropertyVetoException e) {
 			e.printStackTrace();
 		}

@@ -2,8 +2,8 @@ package com.lwy.myselect.test;
 
 import java.util.List;
 
-import com.lwy.myselect.core.Session;
-import com.lwy.myselect.core.SessionFactory;
+import com.lwy.myselect.session.Session;
+import com.lwy.myselect.session.SessionFactory;
 import com.lwy.myselect.entity.Entity;
 
 public class MultiThread implements Runnable {

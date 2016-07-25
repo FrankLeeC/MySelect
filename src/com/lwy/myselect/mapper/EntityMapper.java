@@ -2,8 +2,6 @@ package com.lwy.myselect.mapper;
 
 import java.util.*;
 
-import static com.sun.org.apache.xml.internal.security.keys.keyresolver.KeyResolver.iterator;
-
 /**
  * properties
  *  key:PropertyMapper.column
@@ -19,6 +17,7 @@ public class EntityMapper {
     private String alias;
     private String table;
     private String strategy;
+    private String key;   //主键属性  property
     private Map<String,PropertyMapper> properties;
     private Map<String,SQLMapper> sqls;
 
@@ -40,18 +39,13 @@ public class EntityMapper {
         return strategy;
     }
 
+    public String getKey(){
+        return key;
+    }
+
     public PropertyMapper getPropertyMapper(String name){
         return properties.get(name);
     }
-
-//    public List<String> getProperties(){
-//        List<String> propertyList = new ArrayList<>();
-//        Collection<PropertyMapper> propertyMappers = properties.values();
-//        Iterator<PropertyMapper> iterator = propertyMappers.iterator();
-//        while(iterator.hasNext())
-//            propertyList.add(iterator.next().getName());
-//        return propertyList;
-//    }
 
     public Set<String> getColumns(){
         return properties.keySet();
@@ -66,6 +60,7 @@ public class EntityMapper {
         private String alias;
         private String table;
         private String strategy;
+        private String key;
         private Map<String,PropertyMapper> properties = new HashMap<>();
         private Map<String,SQLMapper> sqls = new HashMap<>() ;
         public Builder(){}
@@ -77,6 +72,7 @@ public class EntityMapper {
             mapper.strategy = strategy;
             mapper.properties = properties;
             mapper.sqls = sqls;
+            mapper.key = key;
             return mapper;
         }
         public Builder className(String className){
@@ -96,6 +92,11 @@ public class EntityMapper {
 
         public Builder strategy(String strategy){
             this.strategy = strategy;
+            return this;
+        }
+
+        public Builder key(String key){
+            this.key = key;
             return this;
         }
 

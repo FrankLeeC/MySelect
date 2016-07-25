@@ -4,14 +4,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-public class JdbcLoader {
+public class DataBaseProperty {
 	private static String driver;
 	private static String url;
 	private static String user;
 	private static String password;
 	
 	static{
-		InputStream in = JdbcLoader.class.getClassLoader().getResourceAsStream("jdbc.properties");
+		InputStream in = DataBaseProperty.class.getClassLoader().getResourceAsStream("jdbc.properties");
 		Properties properties = new Properties();
 		try {
 			properties.load(in);

@@ -1,12 +1,9 @@
-package com.lwy.myselect.mapper;
+package com.lwy.myselect.mapper.util;
 
 import java.io.File;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-
-import static jdk.nashorn.internal.objects.NativeArray.lastIndexOf;
 
 //通过包名获取包下所有的类名 
 public class GetClass {

@@ -3,7 +3,7 @@ package com.lwy.myselect.test;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.lwy.myselect.mapper.GetClass;
+import com.lwy.myselect.mapper.util.GetClass;
 
 //test unit code
 public class TestCode {

@@ -1,12 +1,12 @@
-package com.lwy.myselect.core;
+package com.lwy.myselect.reflection;
 
 import com.lwy.myselect.mapper.EntityMapper;
-import com.lwy.myselect.mapper.KeyNames;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 
-class Reflection {
+public class Reflection {
 	
 	/**
 	 * 获取属性的值，用于放入PreparedStatement中执行
@@ -15,7 +15,7 @@ class Reflection {
 	 * @param clazz 实体对象的类对象
 	 * @return List<Object>  属性值的集合
 	 */
-	static List<Object> reflectToGetProperty(String sqlStatement, Object object, Class<?> clazz, EntityMapper 																								entityMapper){
+	public static List<Object> reflectToGetProperty(String sqlStatement, Object object, Class<?> clazz, EntityMapper 																								entityMapper){
 		List<Object> propertyList = new ArrayList<>();
 		//如果是插入。需要特殊处理
 		if(sqlStatement.trim().toLowerCase().startsWith("insert")){
@@ -119,7 +119,7 @@ class Reflection {
 	 * @param entityMapper 返回类型对应的实体映射
 	 * @return 返回字段名集合
 	 */
-	static List<String> reflectToGetColumn(String sqlStatement,EntityMapper entityMapper){
+	public static List<String> reflectToGetColumn(String sqlStatement,EntityMapper entityMapper){
 		List<String> list;
 		//查询所有字段
 		if(sqlStatement.toLowerCase().trim().startsWith("select * from")){
@@ -146,7 +146,7 @@ class Reflection {
 	 * @param columns 需要查询的字段名，可能是全部，也可能是一部分
 	 * @return 返回一个实例
 	 */
-	static Object reflectToCreateEntity(List<Object> propertyList,String className
+	public static Object reflectToCreateEntity(List<Object> propertyList,String className
 											,List<String> columns, EntityMapper entityMapper){
 		try {
 			Class<?> clazz = Class.forName(className);
@@ -168,5 +168,24 @@ class Reflection {
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+	public static Object reflectToGetId(EntityMapper entityMapper,Object object){
+		String className = entityMapper.getClassName();
+		Object id = null;
+		Class<?> clazz = null;
+		try {
+			clazz = Class.forName(className);
+			String key = entityMapper.getKey();
+			Method[] methods = clazz.getDeclaredMethods();
+			for(Method m:methods){
+				if(("get"+key).equalsIgnoreCase(m.getName())){
+					id = m.invoke(object);
+				}
+			}
+		} catch (ClassNotFoundException | InvocationTargetException | IllegalAccessException e) {
+			e.printStackTrace();
+		}
+		return id;
 	}
 }

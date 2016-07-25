@@ -3,6 +3,7 @@ package com.lwy.myselect.mapper.parser;
 import com.lwy.myselect.annotation.*;
 import com.lwy.myselect.datasource.Option;
 import com.lwy.myselect.mapper.*;
+import com.lwy.myselect.mapper.util.GetClass;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -85,7 +86,7 @@ public class XMLParser {
             }
 
             NodeList annotationList = root.getElementsByTagName("annotation");
-            if(annotationList != null && annotationList.getLength()>0){
+            if(annotationList != null && annotationList.getLength()>0){          //if use annotation configuration
                 entityPackageList = new ArrayList<>();  //entity 所在的包    使用注解
                 annotation = true;
                 Element configTypeElement = (Element) annotationList.item(0);
@@ -122,6 +123,9 @@ public class XMLParser {
         }
     }
 
+    /**
+     * 通过xml配置实体类和sql
+     */
     private static void parseEntityXml(){
         Iterator<String> iterator = locations.keySet().iterator();
         while(iterator.hasNext()){
@@ -130,15 +134,14 @@ public class XMLParser {
                 Document document = db.parse(new File(location));
                 NodeList nl = document.getElementsByTagName("config");
                 Element root = (Element) nl.item(0);
-                /**
-                 * parse property
-                 */
+                //parse property
                 NodeList entityList = root.getElementsByTagName("entity");
                 Element entity = (Element) entityList.item(0);
                 String alias = entity.getAttribute("name");
                 String className = entity.getAttribute("class");
                 String tableName = entity.getAttribute("table");
                 String strategy = null;
+                String key = null;
                 List<PropertyMapper> propertyMapperList = new ArrayList<>();
                 EntityMapper.Builder eb = new EntityMapper.Builder().alias(alias).className(className).table(tableName);
                 EntityMapper entityMapper;
@@ -147,8 +150,9 @@ public class XMLParser {
                     Node n = propertyNodeList.item(j);
                     if(n instanceof Element){
                         Element property = (Element) n;
-                        if("id".equals(property.getNodeName())){
+                        if("id".equals(property.getNodeName())){    //id主键
                             String name = property.getAttribute("name");
+                            key = name;
                             String column = property.getAttribute("column");
                             String type = property.getAttribute("javaType");
                             Class<?> classType = configuration.getClass(type);
@@ -169,82 +173,9 @@ public class XMLParser {
                         }
                     }
                 }
-                /**
-                 * parse sql
-                 */
-            List<SQLMapper> sqlMapperList = new ArrayList<>();
-                NodeList insertList = root.getElementsByTagName("insert");
-                if(insertList != null && insertList.getLength()>0) {
-                    int insertLen = insertList.getLength();
-                    for (int i = 0; i < insertLen; i++) {
-                        Element sqlElement = (Element) insertList.item(i);
-                        String id = sqlElement.getAttribute("id");
-                        String sql = sqlElement.getTextContent().trim();
-                        if (!sql.endsWith(";"))
-                            sql = sql + ";";
-                        String time = sqlElement.getAttribute("timeout") == null? "0" : sqlElement.getAttribute("timeout");
-                        int timeout = Integer.valueOf(time);
-                        String returnAlias = sqlElement.getAttribute("return");
-                        SQLMapper sqlMapper = new SQLMapper.Builder().id(id).sql(sql).timeout(timeout)
-                                .returnAlias(returnAlias).build();
-                        sqlMapperList.add(sqlMapper);
-                    }
-                }
-
-                NodeList deleteList = root.getElementsByTagName("delete");
-                if(deleteList != null && deleteList.getLength()>0){
-                    int deleteLen = deleteList.getLength();
-                    for(int i=0;i<deleteLen;i++){
-                        Element sqlElement = (Element) deleteList.item(i);
-                        String id = sqlElement.getAttribute("id");
-                        String time = sqlElement.getAttribute("timeout") == null? "0" : sqlElement.getAttribute("timeout");
-                        int timeout = Integer.valueOf(time);
-                        String returnAlias = sqlElement.getAttribute("return");
-                        String sql = sqlElement.getTextContent().trim();
-                        if(!sql.endsWith(";"))
-                            sql = sql + ";";
-                        SQLMapper sqlMapper = new SQLMapper.Builder().id(id).timeout(timeout)
-                                .returnAlias(returnAlias).sql(sql).build();
-                        sqlMapperList.add(sqlMapper);
-                    }
-                }
-
-                NodeList updateList = root.getElementsByTagName("update");
-                if(updateList != null && updateList.getLength()>0){
-                    int updateLen = updateList.getLength();
-                    for(int i=0;i<updateLen;i++){
-                        Element sqlElement = (Element) updateList.item(i);
-                        String id = sqlElement.getAttribute("id");
-                        String sql = sqlElement.getTextContent().trim();
-                        if(!sql.endsWith(";"))
-                            sql = sql + ";";
-                        String time = sqlElement.getAttribute("timeout") == null? "0" : sqlElement.getAttribute("timeout");
-                        int timeout = Integer.valueOf(time);
-                        String returnAlias = sqlElement.getAttribute("return");
-                        SQLMapper sqlMapper = new SQLMapper.Builder().id(id).sql(sql).timeout(timeout)
-                                .returnAlias(returnAlias).build();
-                        sqlMapperList.add(sqlMapper);
-                    }
-                }
-
-                NodeList selectList = root.getElementsByTagName("select");
-                if(selectList != null && selectList.getLength()>0){
-                    int selectLen = selectList.getLength();
-                    for(int i=0;i<selectLen;i++){
-                        Element sqlElement = (Element) selectList.item(i);
-                        String id = sqlElement.getAttribute("id");
-                        String returnType = sqlElement.getAttribute("return");
-                        String sql = sqlElement.getTextContent().trim();
-                        if(!sql.endsWith(";"))
-                            sql = sql + ";";
-                        String time = sqlElement.getAttribute("timeout") == null? "0" : sqlElement.getAttribute("timeout");
-                        int timeout = Integer.valueOf(time);
-                        SQLMapper sqlMapper = new SQLMapper.Builder().id(id).sql(sql).timeout(timeout)
-                                .returnAlias(returnType).build();
-                        sqlMapperList.add(sqlMapper);
-                    }
-                }
-                entityMapper = eb.strategy(strategy).properties(propertyMapperList).sqls(sqlMapperList).build();
+                //parse sql
+                List<SQLMapper> sqlMapperList = parseSqlXml(root);
+                entityMapper = eb.strategy(strategy).key(key).properties(propertyMapperList).sqls(sqlMapperList).build();
                 configuration.registerEntity(className,entityMapper);
             } catch (Exception e) {
                 // TODO Auto-generated catch block
@@ -253,6 +184,90 @@ public class XMLParser {
         }
     }
 
+    /**
+     * 通过xml解析sql
+     * @param root   root
+     * @return    sql mapper list
+     */
+    private static List<SQLMapper> parseSqlXml(Element root){
+        List<SQLMapper> sqlMapperList = new ArrayList<>();
+        NodeList insertList = root.getElementsByTagName("insert");
+        if(insertList != null && insertList.getLength()>0) {
+            int insertLen = insertList.getLength();
+            for (int i = 0; i < insertLen; i++) {
+                Element sqlElement = (Element) insertList.item(i);
+                String id = sqlElement.getAttribute("id");
+                String sql = sqlElement.getTextContent().trim();
+                if (!sql.endsWith(";"))
+                    sql = sql + ";";
+                String time = sqlElement.getAttribute("timeout") == null? "0" : sqlElement.getAttribute("timeout");
+                int timeout = Integer.valueOf(time);
+                String returnAlias = sqlElement.getAttribute("return");
+                SQLMapper sqlMapper = new SQLMapper.Builder().id(id).sql(sql).timeout(timeout)
+                        .returnAlias(returnAlias).build();
+                sqlMapperList.add(sqlMapper);
+            }
+        }
+
+        NodeList deleteList = root.getElementsByTagName("delete");
+        if(deleteList != null && deleteList.getLength()>0){
+            int deleteLen = deleteList.getLength();
+            for(int i=0;i<deleteLen;i++){
+                Element sqlElement = (Element) deleteList.item(i);
+                String id = sqlElement.getAttribute("id");
+                String time = sqlElement.getAttribute("timeout") == null? "0" : sqlElement.getAttribute("timeout");
+                int timeout = Integer.valueOf(time);
+                String returnAlias = sqlElement.getAttribute("return");
+                String sql = sqlElement.getTextContent().trim();
+                if(!sql.endsWith(";"))
+                    sql = sql + ";";
+                SQLMapper sqlMapper = new SQLMapper.Builder().id(id).timeout(timeout)
+                        .returnAlias(returnAlias).sql(sql).build();
+                sqlMapperList.add(sqlMapper);
+            }
+        }
+
+        NodeList updateList = root.getElementsByTagName("update");
+        if(updateList != null && updateList.getLength()>0){
+            int updateLen = updateList.getLength();
+            for(int i=0;i<updateLen;i++){
+                Element sqlElement = (Element) updateList.item(i);
+                String id = sqlElement.getAttribute("id");
+                String sql = sqlElement.getTextContent().trim();
+                if(!sql.endsWith(";"))
+                    sql = sql + ";";
+                String time = sqlElement.getAttribute("timeout") == null? "0" : sqlElement.getAttribute("timeout");
+                int timeout = Integer.valueOf(time);
+                String returnAlias = sqlElement.getAttribute("return");
+                SQLMapper sqlMapper = new SQLMapper.Builder().id(id).sql(sql).timeout(timeout)
+                        .returnAlias(returnAlias).build();
+                sqlMapperList.add(sqlMapper);
+            }
+        }
+
+        NodeList selectList = root.getElementsByTagName("select");
+        if(selectList != null && selectList.getLength()>0){
+            int selectLen = selectList.getLength();
+            for(int i=0;i<selectLen;i++){
+                Element sqlElement = (Element) selectList.item(i);
+                String id = sqlElement.getAttribute("id");
+                String returnType = sqlElement.getAttribute("return");
+                String sql = sqlElement.getTextContent().trim();
+                if(!sql.endsWith(";"))
+                    sql = sql + ";";
+                String time = sqlElement.getAttribute("timeout") == null? "0" : sqlElement.getAttribute("timeout");
+                int timeout = Integer.valueOf(time);
+                SQLMapper sqlMapper = new SQLMapper.Builder().id(id).sql(sql).timeout(timeout)
+                        .returnAlias(returnType).build();
+                sqlMapperList.add(sqlMapper);
+            }
+        }
+        return sqlMapperList;
+    }
+
+    /**
+     * 通过注解解析实体类和sql
+     */
     private static void parseEntityAnnotation(){
         List<String> entityPathList = new ArrayList<>();
         for(String str:entityPackageList){ //get all class name
@@ -296,15 +311,16 @@ public class XMLParser {
                                 String name = field.getName();
                                 PropertyMapper propertyMapper = new PropertyMapper.Builder().name(name).column(column)
                                         .nullable(false).type(type).build();
-                                eb.strategy(strategy);
+                                eb.strategy(strategy).key(name);
                                 propertyMapperList.add(propertyMapper);
                             }
                         }
                     }
                     eb.properties(propertyMapperList);
 
-                    List<SQLMapper> sqlMapperList = new ArrayList<>();
+                    List<SQLMapper> sqlMapperList;
                     if(sqlAnnotation){          //sql使用注解配置
+                        sqlMapperList = new ArrayList<>();
                         int index = className.lastIndexOf(".");
                         String packageName = className.substring(0,index);
                         String sqlClassName = packageName + "." + className.substring(index+1) + "SqlMapper";
@@ -364,82 +380,7 @@ public class XMLParser {
                             continue;   //说明当前实例没有配置sql
                         }
                         Element root = (Element) sqlMapperDocument.getElementsByTagName("sql").item(0);
-
-                        NodeList insertList = root.getElementsByTagName("insert");
-                        if(insertList != null && insertList.getLength()>0) {
-                            int insertLen = insertList.getLength();
-                            for (int i = 0; i < insertLen; i++) {
-                                Element sqlElement = (Element) insertList.item(i);
-                                String id = sqlElement.getAttribute("id");
-                                String sql = sqlElement.getTextContent().trim();
-                                if (!sql.endsWith(";"))
-                                    sql = sql + ";";
-                                String time = sqlElement.getAttribute("timeout") == null? "0" : sqlElement
-                                                                                        .getAttribute("timeout");
-                                int timeout = Integer.valueOf(time);
-                                String returnAlias = sqlElement.getAttribute("return");
-                                SQLMapper sqlMapper = new SQLMapper.Builder().id(id).sql(sql).timeout(timeout)
-                                        .returnAlias(returnAlias).build();
-                                sqlMapperList.add(sqlMapper);
-                            }
-                        }
-
-                        NodeList deleteList = root.getElementsByTagName("delete");
-                        if(deleteList != null && deleteList.getLength()>0){
-                            int deleteLen = deleteList.getLength();
-                            for(int i=0;i<deleteLen;i++){
-                                Element sqlElement = (Element) deleteList.item(i);
-                                String id = sqlElement.getAttribute("id");
-                                String time = sqlElement.getAttribute("timeout") == null? "0" : sqlElement
-                                                                                        .getAttribute("timeout");
-                                int timeout = Integer.valueOf(time);
-                                String returnAlias = sqlElement.getAttribute("return");
-                                String sql = sqlElement.getTextContent().trim();
-                                if(!sql.endsWith(";"))
-                                    sql = sql + ";";
-                                SQLMapper sqlMapper = new SQLMapper.Builder().id(id).timeout(timeout)
-                                        .returnAlias(returnAlias).sql(sql).build();
-                                sqlMapperList.add(sqlMapper);
-                            }
-                        }
-
-                        NodeList updateList = root.getElementsByTagName("update");
-                        if(updateList != null && updateList.getLength()>0){
-                            int updateLen = updateList.getLength();
-                            for(int i=0;i<updateLen;i++){
-                                Element sqlElement = (Element) updateList.item(i);
-                                String id = sqlElement.getAttribute("id");
-                                String sql = sqlElement.getTextContent().trim();
-                                if(!sql.endsWith(";"))
-                                    sql = sql + ";";
-                                String time = sqlElement.getAttribute("timeout") == null? "0" : sqlElement
-                                                                                        .getAttribute("timeout");
-                                int timeout = Integer.valueOf(time);
-                                String returnAlias = sqlElement.getAttribute("return");
-                                SQLMapper sqlMapper = new SQLMapper.Builder().id(id).sql(sql).timeout(timeout)
-                                        .returnAlias(returnAlias).build();
-                                sqlMapperList.add(sqlMapper);
-                            }
-                        }
-
-                        NodeList selectList = root.getElementsByTagName("select");
-                        if(selectList != null && selectList.getLength()>0){
-                            int selectLen = selectList.getLength();
-                            for(int i=0;i<selectLen;i++){
-                                Element sqlElement = (Element) selectList.item(i);
-                                String id = sqlElement.getAttribute("id");
-                                String returnType = sqlElement.getAttribute("return");
-                                String sql = sqlElement.getTextContent().trim();
-                                if(!sql.endsWith(";"))
-                                    sql = sql + ";";
-                                String time = sqlElement.getAttribute("timeout") == null? "0" : sqlElement
-                                                                                        .getAttribute("timeout");
-                                int timeout = Integer.valueOf(time);
-                                SQLMapper sqlMapper = new SQLMapper.Builder().id(id).sql(sql).timeout(timeout)
-                                        .returnAlias(returnType).build();
-                                sqlMapperList.add(sqlMapper);
-                            }
-                        }
+                        sqlMapperList = parseSqlXml(root);
                     }
                     EntityMapper entityMapper = eb.sqls(sqlMapperList).build();
                     configuration.registerEntity(entityMapper.getClassName(),entityMapper);

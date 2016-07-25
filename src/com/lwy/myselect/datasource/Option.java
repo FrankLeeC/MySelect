@@ -1,7 +1,6 @@
 package com.lwy.myselect.datasource;
 
 import java.util.Properties;
-import java.util.Set;
 
 
 /** DataSource option

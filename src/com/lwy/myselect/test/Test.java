@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import com.lwy.myselect.core.Session;
-import com.lwy.myselect.core.SessionFactory;
+import com.lwy.myselect.session.Session;
+import com.lwy.myselect.session.SessionFactory;
 import com.lwy.myselect.entity.Entity;
 import com.lwy.myselect.mapper.Configuration;
 import com.lwy.myselect.mapper.parser.XMLParser;

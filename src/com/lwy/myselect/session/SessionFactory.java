@@ -1,7 +1,8 @@
-package com.lwy.myselect.core;
+package com.lwy.myselect.session;
 
+import com.lwy.myselect.cache.CacheManager;
 import com.lwy.myselect.mapper.Configuration;
-import com.lwy.myselect.pool.JdbcConnection;
+import com.lwy.myselect.pool.DataBaseConnection;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -10,14 +11,16 @@ public final class SessionFactory {
 	private static ThreadLocal<Session> local = new ThreadLocal<Session>(); //must be static
 
 	private Configuration configuration;
+	private CacheManager cacheManager;
 
 	public SessionFactory(Configuration configuration){
 		this.configuration = configuration;
+		cacheManager = configuration.createCacheManager();
 	}
 
 	public Session getSession(Class<?> clazz){
-		Session session = new Session(clazz,configuration);
-		Connection connection = JdbcConnection.getConnection(configuration.getOption());
+		Session session = new Session(clazz,configuration,this);
+		Connection connection = DataBaseConnection.getConnection(configuration.getOption());
 		session.setConnection(connection);
 		return session;
 	}
@@ -30,13 +33,14 @@ public final class SessionFactory {
 		Session session = local.get();
 		if(session == null){
 			session = new Session();
-			session.setCurrent(true);	
+			session.setCurrent(true);
 		}
 		local.set(session);
-		Connection connection = JdbcConnection.getConnection(configuration.getOption()); //这里已经修改为数据库连接池
+		Connection connection = DataBaseConnection.getConnection(configuration.getOption()); //这里已经修改为数据库连接池
 		session.setConnection(connection);
 		session.setClazz(clazz);
 		session.setConfiguration(configuration);
+		session.setSessionFactory(this);
 		return session;
 	}
 	
@@ -54,5 +58,9 @@ public final class SessionFactory {
 		else{
 			session.close();
 		}
+	}
+
+	public <T,E> void cache(String className,T t,E e){
+		cacheManager.save(className,t,e);
 	}
 }

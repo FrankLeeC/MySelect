@@ -4,21 +4,27 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Map;
 
 import com.lwy.myselect.datasource.Option;
-import com.lwy.myselect.pool.ConnectionPool;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 
 
-public class JdbcConnection {
+
+public class DataBaseConnection {
+
+	private static ComboPooledDataSource dataSource = null;
+	private final static Object lock = new Object();
 	
-	public static synchronized Connection getConnection(Option option){
-		
-		ComboPooledDataSource cpds = new ConnectionPool().build().getConnectionPool(option);
+	public static Connection getConnection(Option option){
+		if(dataSource == null) {
+			synchronized (lock) {
+				if (dataSource == null)
+					dataSource = new ConnectionPool().build().getConnectionPool(option);
+			}
+		}
 		Connection con = null;
 		try {
-			con = cpds.getConnection();
+			con = dataSource.getConnection();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

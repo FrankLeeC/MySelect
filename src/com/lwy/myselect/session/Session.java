@@ -1,5 +1,7 @@
-package com.lwy.myselect.core;
+package com.lwy.myselect.session;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -9,19 +11,22 @@ import java.util.List;
 
 import com.lwy.myselect.mapper.Configuration;
 import com.lwy.myselect.mapper.EntityMapper;
-import com.lwy.myselect.pool.JdbcConnection;
-import com.lwy.myselect.mapper.KeyNames;
+import com.lwy.myselect.pool.DataBaseConnection;
+import com.lwy.myselect.reflection.Reflection;
+
+import static com.lwy.myselect.reflection.Reflection.reflectToGetId;
 
 public final class Session {
 
 	private boolean current = false;
 	private boolean transaction = false;
-	private List<Object> batchObjectList = null;
-	private String singleBatchSql = null;
-	private List<String> batchSqlList = null;
+	private List<Object> batchObjectList = null;    //批处理对象
+	private String singleBatchSql = null;           //单条sql批处理
+	private List<String> batchSqlList = null;       //批处理sql
 	private Class<?> clazz;
 	private Connection connection;
 	private Configuration configuration;
+	private SessionFactory sessionFactory;
 	
 	public Class<?> getClazz() {
 		return clazz;
@@ -33,9 +38,14 @@ public final class Session {
 	
 	public Session(){}
 
-	public Session(Class<?> clazz,Configuration configuration){
+	public Session(Class<?> clazz,Configuration configuration,SessionFactory sessionFactory){
 		this.clazz = clazz;
 		this.configuration = configuration;
+		this.sessionFactory = sessionFactory;
+	}
+
+	public void setSessionFactory(SessionFactory sessionFactory) {
+		this.sessionFactory = sessionFactory;
 	}
 
 	public void setConfiguration(Configuration configuration){
@@ -109,6 +119,18 @@ public final class Session {
 	}
 	
 	public int insert(String sql,Object object){
+		String key = configuration.getEntity(clazz.getName()).getKey();
+		Method[] methods = clazz.getDeclaredMethods();
+		for(Method m:methods){
+			if(("get"+key).equalsIgnoreCase(m.getName())){
+				try {
+					Object id = m.invoke(object);
+					sessionFactory.cache(clazz.getName(),id,object);
+				} catch (IllegalAccessException | InvocationTargetException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 		return singleSqlBatch(sql,object);
 	}
 	
@@ -182,7 +204,7 @@ public final class Session {
 				if(isTransaction())
 					resetBatch(); //重置batchList 和  sql
 				if(ps != null)
-					JdbcConnection.closeConnection(connection, ps);
+					DataBaseConnection.closeConnection(connection, ps);
 			}
 		}
 		return result;
@@ -195,7 +217,6 @@ public final class Session {
 		String returnAlias = entityMapper.getSQLMapper(sql).getReturnAlias();
 		List<Object> list = Reflection.reflectToGetProperty(sqlStatement, object, clazz,entityMapper);
 		List<Object> result = new ArrayList<>();
-//		Connection connection = JdbcConnection.getConnection();
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		int len = list.size();
@@ -229,7 +250,13 @@ public final class Session {
 					for(int i=0;i<columnLen;i++){
 						columnResult.add(rs.getObject(columnList.get(i)));
 					}
-					result.add(Reflection.reflectToCreateEntity(columnResult, className, columnList,entityMapper));
+					Object o = Reflection.reflectToCreateEntity(columnResult, className, columnList,entityMapper);
+					EntityMapper em = configuration.getEntity(className);
+					Object id = Reflection.reflectToGetId(em,o);
+					//如果id属性不为空，则将其缓存起来
+					if(id != null)
+						sessionFactory.cache(className,id,o);
+					result.add(o);
 				}
 				return result;
 			} catch (SQLException e) {
@@ -237,7 +264,7 @@ public final class Session {
 				e.printStackTrace();
 			} finally{
 				if(rs != null){
-					JdbcConnection.closeConnection(connection, ps, rs);
+					DataBaseConnection.closeConnection(connection, ps, rs);
 				}
 			}
 		}
