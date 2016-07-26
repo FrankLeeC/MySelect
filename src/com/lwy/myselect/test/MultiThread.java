@@ -3,6 +3,7 @@ package com.lwy.myselect.test;
 import java.util.List;
 
 import com.lwy.myselect.session.Session;
+import com.lwy.myselect.session.SimpleSession;
 import com.lwy.myselect.session.SessionFactory;
 import com.lwy.myselect.entity.Entity;
 
@@ -65,13 +66,13 @@ public class MultiThread implements Runnable {
 			sf.closeSession(session4);
 			System.out.println(id+"==========================");
 			System.out.println(id+"==========================");
-			SessionFactory sh2 = new SessionFactory(sf.getConfiguration());
-			Session session5 = sh2.getCurrentSession(Entity.class);
-			System.out.println(id+"   %   "+session5.hashCode()+"   &   "+session5.getConnection().hashCode());
-			long count3 = (long) session5.select("selectCountSpecialEntity", e);
-			System.out.println(id+"===============count3="+count3);
-			sh2.closeSession(session5);
-			System.out.println(id+"==========================");
+//			SessionFactory sh2 = new SessionFactory(sf.getConfiguration());
+//			Session session5 = sh2.getCurrentSession(Entity.class);
+//			System.out.println(id+"   %   "+session5.hashCode()+"   &   "+session5.getConnection().hashCode());
+//			long count3 = (long) session5.select("selectCountSpecialEntity", e);
+//			System.out.println(id+"===============count3="+count3);
+//			sh2.closeSession(session5);
+//			System.out.println(id+"==========================");
 		}
 	}
 

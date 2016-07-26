@@ -27,20 +27,22 @@ public class LRUCache<T,E> implements Cache<T,E>, Runnable {
 
     @Override
     public void save(T t, E e) {
-        synchronized (lock){
-            list.set(0,t);
-            Iterator<T> iterator = list.iterator();
-            while(iterator.hasNext()){
-                if(iterator.next() == t){
-                    iterator.remove();
-                }
-            }
-        }
+        change(t);
         delegate.save(t,e);
     }
 
     @Override
     public E find(T t) {
+        change(t);
+        return delegate.find(t);
+    }
+
+    /**
+     * 把查找的或者保存的放到第一个，并且移除其原本所在位置
+     * 例如：原来在index 5,获取时移到index 0，并将index 5的那个移除
+     * @param t t
+     */
+    private void change(T t){
         synchronized (lock){
             list.set(0,t);
             Iterator<T> iterator = list.iterator();
@@ -50,7 +52,6 @@ public class LRUCache<T,E> implements Cache<T,E>, Runnable {
                 }
             }
         }
-        return delegate.find(t);
     }
 
     @Override
@@ -95,5 +96,6 @@ public class LRUCache<T,E> implements Cache<T,E>, Runnable {
     public void close(){
         clear();
         run = false;
+        delegate.close();
     }
 }

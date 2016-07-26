@@ -8,7 +8,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 public final class SessionFactory {
-	private static ThreadLocal<Session> local = new ThreadLocal<Session>(); //must be static
+	private static ThreadLocal<Session> local = new ThreadLocal<>(); //must be static
 
 	private Configuration configuration;
 	private CacheManager cacheManager;
@@ -19,45 +19,40 @@ public final class SessionFactory {
 	}
 
 	public Session getSession(Class<?> clazz){
-		Session session = new Session(clazz,configuration,this);
 		Connection connection = DataBaseConnection.getConnection(configuration.getOption());
-		session.setConnection(connection);
-		return session;
+		Session session = new SimpleSession.Builder().clazz(clazz)
+													.configuration(configuration)
+													.sessionFactory(this)
+													.connection(connection)
+													.build();
+		return new SimpleSessionWrapper(session);
 	}
 
-	public Configuration getConfiguration() {
-		return configuration;
-	}
+//	public Configuration getConfiguration() {
+//		return configuration;
+//	}
 
 	public Session getCurrentSession(Class<?> clazz){
 		Session session = local.get();
 		if(session == null){
-			session = new Session();
-			session.setCurrent(true);
+			Connection connection = DataBaseConnection.getConnection(configuration.getOption()); //这里已经修改为数据库连接池
+			Session simpleSession = new SimpleSession.Builder(true).clazz(clazz)
+																	.connection(connection)
+																	.configuration(configuration)
+																	.sessionFactory(this).build();
+			session = new SimpleSessionWrapper(simpleSession);
+			local.set(session);
 		}
-		local.set(session);
-		Connection connection = DataBaseConnection.getConnection(configuration.getOption()); //这里已经修改为数据库连接池
-		session.setConnection(connection);
-		session.setClazz(clazz);
-		session.setConfiguration(configuration);
-		session.setSessionFactory(this);
+		if(session.getConnection() == null){
+			Connection connection = DataBaseConnection.getConnection(configuration.getOption()); //这里已经修改为数据库连接池
+			((SimpleSession)((SimpleSessionWrapper) session).getSession()).setConnection(connection);
+			((SimpleSession)((SimpleSessionWrapper) session).getSession()).open();
+		}
 		return session;
 	}
 	
 	public void closeSession(Session session){
-		if(session.isCurrent()){
-			try {
-				if(session.getConnection() != null)
-					session.getConnection().close();
-				session.setConnection(null);
-			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		else{
-			session.close();
-		}
+		session.close();
 	}
 
 	public <T,E> void cache(String className,T t,E e){

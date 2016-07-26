@@ -67,5 +67,6 @@ public class FIFOCache<T,E> implements Cache<T,E>{
     @Override
     public void close() {
         clear();
+        delegate.close();
     }
 }

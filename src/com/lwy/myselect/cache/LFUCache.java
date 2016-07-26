@@ -104,7 +104,7 @@ public class LFUCache<T,E> implements Cache<T,E>, Runnable {
     public void close() {
         clear();
         run = false;
-
+        delegate.close();
     }
 
     @Override

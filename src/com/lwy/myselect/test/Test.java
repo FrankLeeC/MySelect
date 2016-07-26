@@ -7,6 +7,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import com.lwy.myselect.session.Session;
+import com.lwy.myselect.session.SimpleSession;
 import com.lwy.myselect.session.SessionFactory;
 import com.lwy.myselect.entity.Entity;
 import com.lwy.myselect.mapper.Configuration;
@@ -31,7 +32,6 @@ public class Test {
 		e.setDate(new Date());
 		e.setDou(95.9);
 		e.setFl(22.6f);
-//		e.setInte(8);
 		e.setLon(908);
 		e.setStr("bbb");
 		Session session = sf.getSession(Entity.class);

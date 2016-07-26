@@ -46,6 +46,9 @@ public class SessionFactoryCacheManager implements CacheManager {
                 case Strategy.LRU:
                     cache = new LRUCache<>(plain);
                     break;
+                default:
+                    cache = new FIFOCache<>(plain);
+                    break;
             }
             Cache<T,E> temp = (Cache<T, E>) caches.putIfAbsent(className,cache);
             return temp == null ? cache : temp;

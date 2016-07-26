@@ -12,6 +12,7 @@ public class PlainCache<T,E> implements Cache<T,E> {
 
     private int capacity;
     private Map<T,E> cache;
+    private boolean cleared = false;
 
     public PlainCache(int capacity){
         this.capacity = capacity;
@@ -35,11 +36,19 @@ public class PlainCache<T,E> implements Cache<T,E> {
 
     @Override
     public void clear() {
-        cache.clear();
+        if(!cleared){
+            cache.clear();
+            cleared = true;
+        }
     }
 
     @Override
     public int capacity() {
         return capacity;
+    }
+
+    @Override
+    public void close() {
+        clear();
     }
 }
