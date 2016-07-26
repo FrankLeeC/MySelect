@@ -16,7 +16,7 @@ public class EntityMapper {
     private String className;
     private String alias;
     private String table;
-    private String strategy;
+    private String keyStrategy;   //主键策略
     private String key;   //主键属性  property
     private Map<String,PropertyMapper> properties;
     private Map<String,SQLMapper> sqls;
@@ -35,8 +35,8 @@ public class EntityMapper {
         return table;
     }
 
-    public String getStrategy() {
-        return strategy;
+    public String getKeyStrategy() {
+        return keyStrategy;
     }
 
     public String getKey(){
@@ -59,7 +59,7 @@ public class EntityMapper {
         private String className;
         private String alias;
         private String table;
-        private String strategy;
+        private String keyStrategy;
         private String key;
         private Map<String,PropertyMapper> properties = new HashMap<>();
         private Map<String,SQLMapper> sqls = new HashMap<>() ;
@@ -69,7 +69,7 @@ public class EntityMapper {
             mapper.className = className;
             mapper.alias = alias;
             mapper.table = table;
-            mapper.strategy = strategy;
+            mapper.keyStrategy = keyStrategy;
             mapper.properties = properties;
             mapper.sqls = sqls;
             mapper.key = key;
@@ -90,8 +90,8 @@ public class EntityMapper {
             return this;
         }
 
-        public Builder strategy(String strategy){
-            this.strategy = strategy;
+        public Builder keyStrategy(String keyStrategy){
+            this.keyStrategy = keyStrategy;
             return this;
         }
 

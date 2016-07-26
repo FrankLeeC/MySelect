@@ -17,6 +17,10 @@
 		</entity>
 	</annotation>
 
+	<cache>
+		<entity strategy="FIFO">com/lwy/myselect/entity</entity>
+	</cache>
+
 	<!--这表示sql使用xml配置-->
 	<!--<sql>
 		<value>com/lwy/myselect/sql</value>

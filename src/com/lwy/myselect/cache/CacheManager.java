@@ -7,7 +7,8 @@ package com.lwy.myselect.cache;
 public interface CacheManager {
     <T,E> void save(String className,T t,E e);
     <T,E> E find(String className,T t);
-    void registerStrategy(String className,String strategy);
+//    void registerKeyStrategy(String className, String keyStrategy);
+    void registerCacheStrategy(String className, String cacheStrategy);
     <T,E> void closeCache(String className);
     void close();
     boolean contains(String className);

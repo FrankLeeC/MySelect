@@ -236,7 +236,7 @@ public final class SimpleSession implements Session{
 	 * find in cache
 	 * @param object 实体
 	 * @param mapper mapper
-     * @return
+     * @return list contains object in cache
      */
 	private Object findInCache(Object object, EntityMapper mapper){
 //		System.out.println("search in cache");

@@ -118,6 +118,20 @@ public class XMLParser {
                     locations.put(className,location);
                 }
             }
+
+            NodeList cacheList = root.getElementsByTagName("cache");
+            if(cacheList != null && cacheList.getLength()>0){      //使用cache
+                Element cacheElements = (Element) cacheList.item(0);
+                NodeList entityList = cacheElements.getElementsByTagName("entity");
+                if(entityList != null && entityList.getLength()>0){
+                    for(int i=0;i<entityList.getLength();i++){
+                        Element entity = (Element) entityList.item(i);
+                        String strategy = entity.getAttribute("keyStrategy");
+                        String className = entity.getTextContent();
+                        configuration.registerKeyStrategy(className,strategy);
+                    }
+                }
+            }
         } catch(Exception e){
             e.printStackTrace();
         }
@@ -156,7 +170,7 @@ public class XMLParser {
                             String column = property.getAttribute("column");
                             String type = property.getAttribute("javaType");
                             Class<?> classType = configuration.getClass(type);
-                            strategy = property.getAttribute("strategy");
+                            strategy = property.getAttribute("keyStrategy"); //主键策略
                             PropertyMapper propertyMapper = new PropertyMapper.Builder().name(name)
                                     .column(column).type(classType).build();
                             propertyMapperList.add(propertyMapper);
@@ -175,7 +189,7 @@ public class XMLParser {
                 }
                 //parse sql
                 List<SQLMapper> sqlMapperList = parseSqlXml(root);
-                entityMapper = eb.strategy(strategy).key(key).properties(propertyMapperList).sqls(sqlMapperList).build();
+                entityMapper = eb.keyStrategy(strategy).key(key).properties(propertyMapperList).sqls(sqlMapperList).build();
                 configuration.registerEntity(className,entityMapper);
             } catch (Exception e) {
                 // TODO Auto-generated catch block
@@ -311,12 +325,18 @@ public class XMLParser {
                                 String name = field.getName();
                                 PropertyMapper propertyMapper = new PropertyMapper.Builder().name(name).column(column)
                                         .nullable(false).type(type).build();
-                                eb.strategy(strategy).key(name);
+                                eb.keyStrategy(strategy).key(name);
                                 propertyMapperList.add(propertyMapper);
                             }
                         }
                     }
                     eb.properties(propertyMapperList);
+
+                    Cache cache = clazz.getDeclaredAnnotation(Cache.class);
+                    if(cache != null){
+                        String cacheStrategy = cache.value();
+                        configuration.registerKeyStrategy(className,cacheStrategy);
+                    }
 
                     List<SQLMapper> sqlMapperList;
                     if(sqlAnnotation){          //sql使用注解配置

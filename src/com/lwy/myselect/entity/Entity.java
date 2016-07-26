@@ -3,11 +3,13 @@ package com.lwy.myselect.entity;
 import java.io.Serializable;
 import java.util.Date;
 
+import com.lwy.myselect.annotation.Cache;
 import com.lwy.myselect.annotation.Fields;
 import com.lwy.myselect.annotation.KeyProperty;
 import com.lwy.myselect.annotation.Table;
 
 @Table(alias="entity", value = "entity")
+@Cache("FIFO")
 public class Entity implements Serializable{
 	/**
 	 * 

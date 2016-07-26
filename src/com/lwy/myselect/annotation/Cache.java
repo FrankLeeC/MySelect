@@ -5,11 +5,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-//only used on field
+/**
+ * Created by frank lee on 2016/7/26.
+ */
+
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
-public @interface KeyProperty {
-	String value(); //column name
-	Class<?> type(); //class 
-	String strategy(); //id keyStrategy
+@Target(ElementType.TYPE)
+public @interface Cache {
+    String value(); //cache strategy
 }

@@ -3,7 +3,6 @@ package com.lwy.myselect.mapper;
 import com.lwy.myselect.cache.CacheManager;
 import com.lwy.myselect.cache.SessionFactoryCacheManager;
 import com.lwy.myselect.datasource.Option;
-import com.lwy.myselect.entity.Entity;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -25,6 +24,7 @@ public class Configuration {
     private Option option;
     private Map<String,EntityMapper> entityMappers = new ConcurrentHashMap<>();
     private Map<String,String> aliases = new ConcurrentHashMap<>();
+    private Map<String,String> strategies = new HashMap<>();
     private static Map<String,Class<?>> classTypes = new HashMap<>();
 
     public Configuration(){
@@ -62,6 +62,10 @@ public class Configuration {
         aliases.put(alias,name);
     }
 
+    public void registerKeyStrategy(String className, String keyStrategy){
+        strategies.put(className,keyStrategy);
+    }
+
     public EntityMapper getEntity(String name){
         return entityMappers.get(name);
     }
@@ -80,11 +84,14 @@ public class Configuration {
 
     public CacheManager createCacheManager(){
         CacheManager cacheManager = new SessionFactoryCacheManager();
-        Collection<EntityMapper> entityMapperCollection = entityMappers.values();
-        Iterator<EntityMapper> iterator = entityMapperCollection.iterator();
-        while(iterator.hasNext()){
-            EntityMapper mapper = iterator.next();
-            cacheManager.registerStrategy(mapper.getClassName(),mapper.getStrategy());
+        //cache keyStrategy
+        if(strategies.size()>0){
+            Iterator<String> cacheIterator = strategies.keySet().iterator();
+            while(cacheIterator.hasNext()){
+                String className = cacheIterator.next();
+                String strategy = strategies.get(className);
+                cacheManager.registerCacheStrategy(className,strategy);
+            }
         }
         return cacheManager;
     }

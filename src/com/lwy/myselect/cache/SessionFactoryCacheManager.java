@@ -6,6 +6,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static javafx.scene.input.KeyCode.T;
+
 /**
  * SessionFactory Cache
  * Created by frank lee on 2016/7/23.
@@ -25,7 +27,7 @@ public class SessionFactoryCacheManager implements CacheManager {
     private ConcurrentHashMap<String,Cache<?,?>> caches = new ConcurrentHashMap<>();
 
     /**
-     * this map holds cache strategy, different class can use different strategy
+     * this map holds cache keyStrategy, different class can use different keyStrategy
      * 这个map保存类使用的缓存策略，不同的类可以使用不同的策略
      */
     private Map<String,String> cacheStrategy = new HashMap<>();
@@ -79,8 +81,8 @@ public class SessionFactoryCacheManager implements CacheManager {
     }
 
     @Override
-    public void registerStrategy(String className, String strategy) {
-        cacheStrategy.put(className,strategy);
+    public void registerCacheStrategy(String className, String cacheStrategy) {
+        this.cacheStrategy.put(className,cacheStrategy);
     }
 
     private String getStrategy(String className){

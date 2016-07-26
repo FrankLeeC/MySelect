@@ -5,7 +5,6 @@ import com.lwy.myselect.mapper.Configuration;
 import com.lwy.myselect.pool.DataBaseConnection;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 
 public final class SessionFactory {
 	private static ThreadLocal<Session> local = new ThreadLocal<>(); //must be static
