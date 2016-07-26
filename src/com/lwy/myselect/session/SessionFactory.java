@@ -58,4 +58,8 @@ public final class SessionFactory {
 	public <T,E> void cache(String className,T t,E e){
 		cacheManager.save(className,t,e);
 	}
+
+	protected CacheManager getCacheManager(){
+		return cacheManager;
+	}
 }

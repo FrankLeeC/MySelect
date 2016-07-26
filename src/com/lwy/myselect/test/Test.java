@@ -22,9 +22,30 @@ public class Test {
 //		insert(sf);
 //		delete(sf);
 //		update(sf);
-		select(sf);
+//		select(sf);
 //		concurrentSelect(sf);
 //		transactionTest(sf);
+		selectSame(sf);
+	}
+
+	private static void selectSame(SessionFactory sf){
+		Entity e = new Entity();
+		e.setInte(5);
+		Session session2 = sf.getCurrentSession(Entity.class);
+		System.out.println(session2.hashCode()+"      "+session2.getConnection().hashCode());
+		List<Object> list2 = (List<Object>) session2.select("selectEntity", e);
+		for(int i=0;i<list2.size();i++){
+			System.out.println(list2.get(i));
+		}
+		sf.closeSession(session2);
+		System.out.println("=============");
+		Session session3 = sf.getCurrentSession(Entity.class);
+		System.out.println(session3.hashCode()+"      "+session3.getConnection().hashCode());
+		List<Object> list3 = (List<Object>) session3.select("selectEntity", e);
+		for(int i=0;i<list3.size();i++){
+			System.out.println(list3.get(i));
+		}
+		sf.closeSession(session3);
 	}
 
 	private static void insert(SessionFactory sf) {

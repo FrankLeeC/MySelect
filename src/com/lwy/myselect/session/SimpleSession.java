@@ -1,5 +1,10 @@
 package com.lwy.myselect.session;
 
+import com.lwy.myselect.mapper.Configuration;
+import com.lwy.myselect.mapper.EntityMapper;
+import com.lwy.myselect.pool.DataBaseConnection;
+import com.lwy.myselect.reflection.Reflection;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.Connection;
@@ -8,13 +13,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
-import com.lwy.myselect.mapper.Configuration;
-import com.lwy.myselect.mapper.EntityMapper;
-import com.lwy.myselect.pool.DataBaseConnection;
-import com.lwy.myselect.reflection.Reflection;
-
-import static com.lwy.myselect.reflection.Reflection.reflectToGetId;
 
 public final class SimpleSession implements Session{
 
@@ -233,11 +231,55 @@ public final class SimpleSession implements Session{
 		}
 		return result;
 	}
+
+	/**
+	 * find in cache
+	 * @param object 实体
+	 * @param mapper mapper
+     * @return
+     */
+	private Object findInCache(Object object, EntityMapper mapper){
+//		System.out.println("search in cache");
+		String key = mapper.getKey();
+		Class<?> clazz = null;
+		try {
+			clazz = Class.forName(mapper.getClassName());
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+		if(clazz != null){
+			Method[] methods = clazz.getDeclaredMethods();
+			Object t = null;
+			for(Method m:methods){
+				if(("get"+key).equalsIgnoreCase(m.getName())){
+					try {
+						t = m.invoke(object);
+					} catch (IllegalAccessException | InvocationTargetException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+			List<Object> list = new ArrayList<>();
+			Object result = sessionFactory.getCacheManager().find(mapper.getClassName(),t);
+			if(result != null) {
+				list.add(result);
+				return list;
+			}
+		}
+		return null;
+	}
 	
 	@Override
 	public Object select(String sql,Object object){
 		EntityMapper entityMapper = configuration.getEntity(clazz.getName());
 		String sqlStatement = entityMapper.getSQLMapper(sql).getSql();
+		if(!sqlStatement.contains("count(*)")){
+			Object result = findInCache(object,entityMapper);
+			if(result != null) {
+				System.out.println("get in cache");
+				return result;
+			}
+		}
 		String returnAlias = entityMapper.getSQLMapper(sql).getReturnAlias();
 		List<Object> list = Reflection.reflectToGetProperty(sqlStatement, object, clazz,entityMapper);
 		List<Object> result = new ArrayList<>();
@@ -278,8 +320,9 @@ public final class SimpleSession implements Session{
 					EntityMapper em = configuration.getEntity(className);
 					Object id = Reflection.reflectToGetId(em,o);
 					//如果id属性不为空，则将其缓存起来
-					if(id != null)
-						sessionFactory.cache(className,id,o);
+					if(id != null) {
+						sessionFactory.cache(className, id, o);
+					}
 					result.add(o);
 				}
 				return result;
