@@ -4,9 +4,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-/**LRU cache
+/**
+ * LRU cache
  * 当前时间之前最近没使用的
+ *
  * Created by frank lee on 2016/7/23.
+ * Email: frankleecsz@gmail.com
  */
 public class LRUCache<T,E> implements Cache<T,E>, Runnable {
 

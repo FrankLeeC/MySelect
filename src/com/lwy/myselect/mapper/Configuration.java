@@ -4,7 +4,6 @@ import com.lwy.myselect.cache.CacheManager;
 import com.lwy.myselect.cache.SessionFactoryCacheManager;
 import com.lwy.myselect.datasource.Option;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -19,13 +18,16 @@ import java.util.concurrent.ConcurrentHashMap;
  *  key:alias
  *  value:class name
  * Created by frank lee on 2016/7/20.
+ * Email: frankleecsz@gmail.com
  */
 public class Configuration {
     private Option option;
+    private Option defaultOption;
     private Map<String,EntityMapper> entityMappers = new ConcurrentHashMap<>();
     private Map<String,String> aliases = new ConcurrentHashMap<>();
     private Map<String,String> strategies = new HashMap<>();
     private static Map<String,Class<?>> classTypes = new HashMap<>();
+    private String poolType;
 
     public Configuration(){
         registerType("byte",byte.class);
@@ -66,6 +68,10 @@ public class Configuration {
         strategies.put(className,keyStrategy);
     }
 
+    public void registerPoolType(String poolType){
+        this.poolType = poolType;
+    }
+
     public EntityMapper getEntity(String name){
         return entityMappers.get(name);
     }
@@ -75,7 +81,11 @@ public class Configuration {
     }
 
     public Option getOption(){
-        return option;
+        return option == null ? defaultOption : option;
+    }
+
+    public String getPoolType(){
+        return poolType;
     }
 
     public Class<?> getClass(String name){

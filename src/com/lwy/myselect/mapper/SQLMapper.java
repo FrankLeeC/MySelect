@@ -2,6 +2,7 @@ package com.lwy.myselect.mapper;
 
 /**
  * Created by frank lee on 2016/7/21.
+ * Email: frankleecsz@gmail.com
  */
 public class SQLMapper {
     private String id;  //sql identify

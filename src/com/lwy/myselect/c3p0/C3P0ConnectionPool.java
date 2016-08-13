@@ -1,4 +1,4 @@
-package com.lwy.myselect.pool;
+package com.lwy.myselect.c3p0;
 
 import java.beans.PropertyVetoException;
 
@@ -6,16 +6,16 @@ import com.lwy.myselect.datasource.Option;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 
 
-public class ConnectionPool {
+public class C3P0ConnectionPool {
 	protected static ComboPooledDataSource cpds = null;
 	
-	public ConnectionPool build(){
+	public C3P0ConnectionPool build(){
 		try {
 			cpds = new ComboPooledDataSource();
-			cpds.setDriverClass(DataBaseProperty.getDriver());
-			cpds.setJdbcUrl(DataBaseProperty.getUrl());
-			cpds.setUser(DataBaseProperty.getUser());
-			cpds.setPassword(DataBaseProperty.getPassword());
+			cpds.setDriverClass(C3P0DataBaseProperty.getDriver());
+			cpds.setJdbcUrl(C3P0DataBaseProperty.getUrl());
+			cpds.setUser(C3P0DataBaseProperty.getUser());
+			cpds.setPassword(C3P0DataBaseProperty.getPassword());
 		} catch (PropertyVetoException e) {
 			e.printStackTrace();
 		}
@@ -23,12 +23,12 @@ public class ConnectionPool {
 	}
 	
 	public ComboPooledDataSource getConnectionPool(){
-		new DefaultConnectionPool();
+		new C3P0DefaultConnectionPool();
 		return cpds;
 	}
 	
 	public ComboPooledDataSource getConnectionPool(Option option){
-		new CustomConnectionPool(option);
+		new C3P0CustomConnectionPool(option);
 		return cpds;
 	}
 }

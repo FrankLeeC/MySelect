@@ -6,7 +6,9 @@ import java.util.LinkedList;
 /**
  * fifo cache
  * 先进先出算法实现
+ *
  * Created by frank lee on 2016/7/23.
+ * Email: frankleecsz@gmail.com
  */
 public class FIFOCache<T,E> implements Cache<T,E>{
 

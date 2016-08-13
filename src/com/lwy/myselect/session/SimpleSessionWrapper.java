@@ -5,6 +5,7 @@ import java.sql.Connection;
 /**
  * decorator of session
  * Created by frank lee on 2016/7/26.
+ * Email: frankleecsz@gmail.com
  */
 public class SimpleSessionWrapper implements Session{
 

@@ -1,9 +1,9 @@
-package com.lwy.myselect.pool;
+package com.lwy.myselect.c3p0;
 
 
-public class DefaultConnectionPool extends ConnectionPool{
+public class C3P0DefaultConnectionPool extends C3P0ConnectionPool {
 	
-	public DefaultConnectionPool(){
+	public C3P0DefaultConnectionPool(){
 		cpds.setCheckoutTimeout(30000);
 		cpds.setIdleConnectionTestPeriod(30);
 		cpds.setInitialPoolSize(10);

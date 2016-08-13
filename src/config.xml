@@ -1,5 +1,6 @@
 <?xml version='1.0' encoding="utf-8" ?>
 <mapper>
+	<connectionpool>default</connectionpool>  <!--使用默认的连接池，如果使用别的，就写类名-->
 	<datasource>
 		<option name="first">
 			<property name="acquireIncrement">5</property>

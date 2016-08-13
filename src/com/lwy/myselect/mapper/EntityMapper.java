@@ -11,6 +11,7 @@ import java.util.*;
  *  key:SQLMapper.id
  *  value:SQLMapper
  * Created by frank lee on 2016/7/20.
+ * Email: frankleecsz@gmail.com
  */
 public class EntityMapper {
     private String className;

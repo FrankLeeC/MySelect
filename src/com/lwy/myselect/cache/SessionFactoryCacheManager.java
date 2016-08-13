@@ -10,7 +10,9 @@ import static javafx.scene.input.KeyCode.T;
 
 /**
  * SessionFactory Cache
+ *
  * Created by frank lee on 2016/7/23.
+ * Email: frankleecsz@gmail.com
  */
 public class SessionFactoryCacheManager implements CacheManager {
 

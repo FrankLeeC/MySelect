@@ -1,12 +1,12 @@
 package com.lwy.myselect.session;
 
-import com.lwy.myselect.mapper.Configuration;
 
 import java.sql.Connection;
 
 /**
  * Session
  * Created by frank lee on 2016/7/26.
+ * Email: frankleecsz@gmail.com
  */
 public interface Session {
 

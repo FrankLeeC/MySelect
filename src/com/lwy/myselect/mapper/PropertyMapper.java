@@ -2,6 +2,7 @@ package com.lwy.myselect.mapper;
 
 /**
  * Created by frank lee on 2016/7/20.
+ * Email: frankleecsz@gmail.com
  */
 public class PropertyMapper {
     private String name;  //property name

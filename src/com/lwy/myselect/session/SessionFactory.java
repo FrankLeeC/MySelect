@@ -1,8 +1,8 @@
 package com.lwy.myselect.session;
 
 import com.lwy.myselect.cache.CacheManager;
+import com.lwy.myselect.datasource.pool.DataBaseConnection;
 import com.lwy.myselect.mapper.Configuration;
-import com.lwy.myselect.pool.DataBaseConnection;
 
 import java.sql.Connection;
 
@@ -18,7 +18,7 @@ public final class SessionFactory {
 	}
 
 	public Session getSession(Class<?> clazz){
-		Connection connection = DataBaseConnection.getConnection(configuration.getOption());
+		Connection connection = DataBaseConnection.getConnection(configuration.getPoolType(),configuration.getOption());
 		Session session = new SimpleSession.Builder().clazz(clazz)
 													.configuration(configuration)
 													.sessionFactory(this)
@@ -34,7 +34,7 @@ public final class SessionFactory {
 	public Session getCurrentSession(Class<?> clazz){
 		Session session = local.get();
 		if(session == null){
-			Connection connection = DataBaseConnection.getConnection(configuration.getOption()); //这里已经修改为数据库连接池
+			Connection connection = DataBaseConnection.getConnection(configuration.getPoolType(),configuration.getOption()); //这里已经修改为数据库连接池
 			Session simpleSession = new SimpleSession.Builder(true).clazz(clazz)
 																	.connection(connection)
 																	.configuration(configuration)
@@ -43,7 +43,7 @@ public final class SessionFactory {
 			local.set(session);
 		}
 		if(session.getConnection() == null){
-			Connection connection = DataBaseConnection.getConnection(configuration.getOption()); //这里已经修改为数据库连接池
+			Connection connection = DataBaseConnection.getConnection(configuration.getPoolType(),configuration.getOption()); //这里已经修改为数据库连接池
 			((SimpleSession)((SimpleSessionWrapper) session).getSession()).setConnection(connection);
 			((SimpleSession)((SimpleSessionWrapper) session).getSession()).open();
 		}

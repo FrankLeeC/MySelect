@@ -6,7 +6,9 @@ import java.util.Map;
 /**
  * plain implementation of cache
  * 普通的cache实现，没有任何算法包装，用于委派模式的最终执行者
+ *
  * Created by frank lee on 2016/7/23.
+ * Email: frankleecsz@gmail.com
  */
 public class PlainCache<T,E> implements Cache<T,E> {
 

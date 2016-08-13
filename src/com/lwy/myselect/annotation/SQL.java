@@ -7,6 +7,7 @@ import java.lang.annotation.Target;
 
 /**
  * Created by frank lee on 2016/7/22.
+ * Email: frankleecsz@gmail.com
  */
 
 @Retention(RetentionPolicy.RUNTIME)

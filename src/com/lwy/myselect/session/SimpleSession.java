@@ -1,8 +1,8 @@
 package com.lwy.myselect.session;
 
+import com.lwy.myselect.datasource.pool.DataBaseConnection;
 import com.lwy.myselect.mapper.Configuration;
 import com.lwy.myselect.mapper.EntityMapper;
-import com.lwy.myselect.pool.DataBaseConnection;
 import com.lwy.myselect.reflection.Reflection;
 
 import java.lang.reflect.InvocationTargetException;

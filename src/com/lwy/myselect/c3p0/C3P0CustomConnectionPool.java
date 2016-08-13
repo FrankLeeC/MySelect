@@ -1,20 +1,17 @@
-package com.lwy.myselect.pool;
+package com.lwy.myselect.c3p0;
 
 import com.lwy.myselect.datasource.Option;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Properties;
 
-import static java.lang.System.getProperties;
 
-
-public class CustomConnectionPool extends ConnectionPool {
+public class C3P0CustomConnectionPool extends C3P0ConnectionPool {
 	
-	public CustomConnectionPool(Option option){
-		new DefaultConnectionPool();
+	public C3P0CustomConnectionPool(Option option){
+		new C3P0DefaultConnectionPool();
 		configCustomProperty(option);
 	}
 	

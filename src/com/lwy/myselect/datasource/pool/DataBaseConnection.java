@@ -1,25 +1,30 @@
-package com.lwy.myselect.pool;
+package com.lwy.myselect.datasource.pool;
 
+import com.lwy.myselect.c3p0.C3P0ConnectionPool;
+import com.lwy.myselect.datasource.DefaultDataSource;
+import com.lwy.myselect.datasource.Option;
+
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import com.lwy.myselect.datasource.Option;
-import com.mchange.v2.c3p0.ComboPooledDataSource;
-
-
 
 public class DataBaseConnection {
 
-	private static ComboPooledDataSource dataSource = null;
+	private static DataSource dataSource = null;
 	private final static Object lock = new Object();
 	
-	public static Connection getConnection(Option option){
+	public static Connection getConnection(String poolType, Option option){
 		if(dataSource == null) {
 			synchronized (lock) {
-				if (dataSource == null)
-					dataSource = new ConnectionPool().build().getConnectionPool(option);
+				if (dataSource == null){
+					if("default".equalsIgnoreCase(poolType))
+						dataSource = new DefaultDataSource(option);
+					else
+						dataSource = new C3P0ConnectionPool().build().getConnectionPool(option);
+				}
 			}
 		}
 		Connection con = null;

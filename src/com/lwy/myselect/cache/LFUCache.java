@@ -2,10 +2,13 @@ package com.lwy.myselect.cache;
 
 import java.util.*;
 
-/**LFUCache
+/**
+ * LFUCache
  * 近期最少使用
  * 淘汰一定时期内被访问次数最少的对象
+ *
  * Created by frank lee on 2016/7/23.
+ * Email: frankleecsz@gmail.com
  */
 public class LFUCache<T,E> implements Cache<T,E>, Runnable {
 

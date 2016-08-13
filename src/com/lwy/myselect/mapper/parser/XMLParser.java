@@ -22,6 +22,7 @@ import java.util.*;
 /**
  * parse
  * Created by frank lee on 2016/7/21.
+ * Email: frankleecsz@gmail.com
  */
 public class XMLParser {
     private static DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -62,6 +63,13 @@ public class XMLParser {
             Document document = db.parse(new File("src/config.xml"));
             NodeList nl = document.getElementsByTagName("mapper");
             Element root = (Element) nl.item(0);
+            NodeList poolList = root.getElementsByTagName("connectionpool");
+            if(poolList != null){
+               configuration.registerPoolType(poolList.item(0).getTextContent());
+            }
+            else{
+                configuration.registerPoolType("default");
+            }
             NodeList dataSourceList = root.getElementsByTagName("datasource");
             if(dataSourceList != null && dataSourceList.getLength()>0){
                 Element dataSource = (Element) dataSourceList.item(0);

@@ -1,17 +1,17 @@
-package com.lwy.myselect.pool;
+package com.lwy.myselect.c3p0;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-public class DataBaseProperty {
+public class C3P0DataBaseProperty {
 	private static String driver;
 	private static String url;
 	private static String user;
 	private static String password;
 	
 	static{
-		InputStream in = DataBaseProperty.class.getClassLoader().getResourceAsStream("jdbc.properties");
+		InputStream in = C3P0DataBaseProperty.class.getClassLoader().getResourceAsStream("jdbc.properties");
 		Properties properties = new Properties();
 		try {
 			properties.load(in);
