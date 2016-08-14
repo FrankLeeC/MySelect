@@ -1,6 +1,6 @@
 package com.lwy.myselect.session;
 
-import com.lwy.myselect.datasource.pool.DataBaseConnection;
+import com.lwy.myselect.datasource.pool.ConnectionPool;
 import com.lwy.myselect.mapper.Configuration;
 import com.lwy.myselect.mapper.EntityMapper;
 import com.lwy.myselect.reflection.Reflection;
@@ -226,7 +226,7 @@ public final class SimpleSession implements Session{
 				if(isTransaction())
 					resetBatch(); //重置batchList 和  sql
 				if(ps != null)
-					DataBaseConnection.closeConnection(connection, ps);
+					ConnectionPool.closeConnection(connection, ps);
 			}
 		}
 		return result;
@@ -330,7 +330,9 @@ public final class SimpleSession implements Session{
 				e.printStackTrace();
 			} finally{
 				if(rs != null){
-					DataBaseConnection.closeConnection(connection, ps, rs);
+					ConnectionPool.closeConnection(connection, ps, rs);
+					connection = null;
+					closed = true;
 				}
 			}
 		}

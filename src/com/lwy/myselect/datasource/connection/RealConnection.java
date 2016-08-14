@@ -93,8 +93,10 @@ class RealConnection implements ConnectionWrapper{
     @Override
     public void close() throws SQLException {
         System.out.println("recycle connection:"+hashCode());
-        if(realStatement != null)
+        if(realStatement != null) {
             realStatement.close();
+            realStatement = null;
+        }
         ((ManagedPooledConnection)pooledConnection).recycle();
     }
 
