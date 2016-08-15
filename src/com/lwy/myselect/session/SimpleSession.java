@@ -1,6 +1,8 @@
 package com.lwy.myselect.session;
 
 import com.lwy.myselect.datasource.pool.ConnectionPool;
+import com.lwy.myselect.executor.Executor;
+import com.lwy.myselect.executor.StandardExecutor;
 import com.lwy.myselect.mapper.Configuration;
 import com.lwy.myselect.mapper.EntityMapper;
 import com.lwy.myselect.reflection.Reflection;
@@ -26,6 +28,8 @@ public final class SimpleSession extends BaseSession{
 	private Configuration configuration;
 	private SessionFactory sessionFactory;
 	private boolean closed = false;
+	private boolean autoCommit = true;             //自动提交
+	private Executor executor;
 
 	private void setClazz(Class<?> clazz){
 		this.clazz = clazz; 
@@ -47,6 +51,14 @@ public final class SimpleSession extends BaseSession{
 
 	private void setCurrent(boolean current){
 		this.current = current;
+	}
+
+	private void setExecutor(Executor executor){
+		this.executor = executor;
+	}
+
+	private void setAutoCommit(boolean autoCommit){
+		this.autoCommit = autoCommit;
 	}
 
 	@Override
@@ -164,6 +176,34 @@ public final class SimpleSession extends BaseSession{
 		return singleSqlBatch(sql,object);
 	}
 
+	private int executeUpdate(String sql,Object object) throws SQLException {
+		EntityMapper entityMapper = configuration.getEntity(clazz.getName());
+		String sqlStatement = entityMapper.getSQLMapper(sql).getSql();
+		List<Object> propertyList = Reflection.reflectToGetProperty(sqlStatement, object, clazz,entityMapper);
+		return executor.update(sqlStatement,propertyList);
+	}
+
+	private Object executeQuery(String sql,Object object) throws SQLException {
+		EntityMapper entityMapper = configuration.getEntity(clazz.getName());
+		String sqlStatement = entityMapper.getSQLMapper(sql).getSql();
+		if(!sqlStatement.contains("count(*)")){
+			Object result = findInCache(object,entityMapper);
+			if(result != null) {
+				System.out.println("get in cache");
+				return result;
+			}
+		}
+		String returnAlias = entityMapper.getSQLMapper(sql).getReturnAlias();
+		String className = configuration.getClassName(returnAlias);
+		EntityMapper returnEntityMapper = configuration.getEntity(className);
+		List<Object> propertyList = Reflection.reflectToGetProperty(sqlStatement, object, clazz,entityMapper);
+		return executor.query(sqlStatement,propertyList,returnEntityMapper);
+	}
+
+	private int executeTransaction(){
+		return 0;
+	}
+
 	private int insertAndDeleteAndUpdate(String sql,Object object){
 		int result = 0;
 		EntityMapper entityMapper = configuration.getEntity(clazz.getName());
@@ -268,76 +308,86 @@ public final class SimpleSession extends BaseSession{
 		}
 		return null;
 	}
-	
+
 	@Override
 	public Object select(String sql,Object object){
-		EntityMapper entityMapper = configuration.getEntity(clazz.getName());
-		String sqlStatement = entityMapper.getSQLMapper(sql).getSql();
-		if(!sqlStatement.contains("count(*)")){
-			Object result = findInCache(object,entityMapper);
-			if(result != null) {
-				System.out.println("get in cache");
-				return result;
-			}
-		}
-		String returnAlias = entityMapper.getSQLMapper(sql).getReturnAlias();
-		List<Object> list = Reflection.reflectToGetProperty(sqlStatement, object, clazz,entityMapper);
-		List<Object> result = new ArrayList<>();
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		int len = list.size();
-		List<String> columnList = null; 
-		int columnLen = 0; 
-		//带条件查询
-		if(len>0){
-			String className = configuration.getClassName(returnAlias);
-			EntityMapper em = configuration.getEntity(className);
-			columnList = Reflection.reflectToGetColumn(sqlStatement,em);
-			columnLen = columnList.size();
-		}
-		if(connection != null){
-			try {
-				ps = connection.prepareStatement(sqlStatement);
-				//如果带条件查询，就需要填充
-				if(len>0){
-					for(int i=0;i<len;i++)
-						ps.setObject(i+1, list.get(i));
-				}
-				rs = ps.executeQuery();
-				//如果查询数量
-				if(sqlStatement.contains("count(*)")){
-					rs.first();
-					return rs.getObject("count(*)"); //查询记录条数时，结果是一张表，count(*)字段就是记录条数
-				}
-				//如果不是查询数量
-				String className = configuration.getClassName(returnAlias);
-				while(rs.next()){
-					List<Object> columnResult = new ArrayList<>();
-					for(int i=0;i<columnLen;i++){
-						columnResult.add(rs.getObject(columnList.get(i)));
-					}
-					Object o = Reflection.reflectToCreateEntity(columnResult, className, columnList,entityMapper);
-					EntityMapper em = configuration.getEntity(className);
-					Object id = Reflection.reflectToGetId(em,o);
-					//如果id属性不为空，则将其缓存起来
-					if(id != null) {
-						sessionFactory.cache(className, id, o);
-					}
-					result.add(o);
-				}
-				return result;
-			} catch (SQLException e) {
-				e.printStackTrace();
-			} finally{
-				if(rs != null){
-					ConnectionPool.closeConnection(connection, ps, rs);
-					connection = null;
-					closed = true;
-				}
-			}
+		try {
+			return executeQuery(sql,object);
+		} catch (SQLException e) {
+			e.printStackTrace();
 		}
 		return null;
 	}
+	
+//	@Override
+//	public Object select(String sql,Object object){
+//		EntityMapper entityMapper = configuration.getEntity(clazz.getName());
+//		String sqlStatement = entityMapper.getSQLMapper(sql).getSql();
+//		if(!sqlStatement.contains("count(*)")){
+//			Object result = findInCache(object,entityMapper);
+//			if(result != null) {
+//				System.out.println("get in cache");
+//				return result;
+//			}
+//		}
+//		String returnAlias = entityMapper.getSQLMapper(sql).getReturnAlias();
+//		List<Object> list = Reflection.reflectToGetProperty(sqlStatement, object, clazz,entityMapper);
+//		List<Object> result = new ArrayList<>();
+//		PreparedStatement ps = null;
+//		ResultSet rs = null;
+//		int len = list.size();
+//		List<String> columnList = null;
+//		int columnLen = 0;
+//		//带条件查询
+//		if(len>0){
+//			String className = configuration.getClassName(returnAlias);    //返回对象的类名
+//			EntityMapper em = configuration.getEntity(className);          //返回对象的实体映射
+//			columnList = Reflection.reflectToGetColumn(sqlStatement,em);   //返回的字段名
+//			columnLen = columnList.size();
+//		}
+//		if(connection != null){
+//			try {
+//				ps = connection.prepareStatement(sqlStatement);
+//				//如果带条件查询，就需要填充
+//				if(len>0){
+//					for(int i=0;i<len;i++)
+//						ps.setObject(i+1, list.get(i));
+//				}
+//				rs = ps.executeQuery();
+//				//如果查询数量
+//				if(sqlStatement.contains("count(*)")){
+//					rs.first();
+//					return rs.getObject("count(*)"); //查询记录条数时，结果是一张表，count(*)字段就是记录条数
+//				}
+//				//如果不是查询数量
+//				String className = configuration.getClassName(returnAlias);
+//				while(rs.next()){
+//					List<Object> columnResult = new ArrayList<>();
+//					for(int i=0;i<columnLen;i++){
+//						columnResult.add(rs.getObject(columnList.get(i)));
+//					}
+//					EntityMapper em = configuration.getEntity(className);
+//					Object o = Reflection.reflectToCreateEntity(columnResult, className, columnList,em);
+//					Object id = Reflection.reflectToGetId(em,o);
+//					//如果id属性不为空，则将其缓存起来
+//					if(id != null) {
+//						sessionFactory.cache(className, id, o);
+//					}
+//					result.add(o);
+//				}
+//				return result;
+//			} catch (SQLException e) {
+//				e.printStackTrace();
+//			} finally{
+//				if(rs != null){
+//					ConnectionPool.closeConnection(connection, ps, rs);
+//					connection = null;
+//					closed = true;
+//				}
+//			}
+//		}
+//		return null;
+//	}
 
 	protected static class Builder{
 
@@ -351,6 +401,8 @@ public final class SimpleSession extends BaseSession{
 
 		private boolean current = false;
 
+		private boolean autoCommit = false;
+
 		protected Builder(){}
 
 		protected Builder(boolean current){
@@ -363,6 +415,7 @@ public final class SimpleSession extends BaseSession{
 		}
 
 		protected Builder connection(Connection connection){
+			System.out.println("in SimpleSession: connection.hashCode="+connection.hashCode());
 			this.connection = connection;
 			return this;
 		}
@@ -377,6 +430,15 @@ public final class SimpleSession extends BaseSession{
 			return this;
 		}
 
+		protected Builder autoCommit(boolean autoCommit){
+			this.autoCommit = autoCommit;
+			return this;
+		}
+
+		private Executor createExecutor(Session session){
+			return new StandardExecutor(session,connection);
+		}
+
 		protected SimpleSession build(){
 			SimpleSession session = new SimpleSession();
 			session.setConnection(connection);
@@ -384,6 +446,7 @@ public final class SimpleSession extends BaseSession{
 			session.setConfiguration(configuration);
 			session.setSessionFactory(sessionFactory);
 			session.setCurrent(current);
+			session.setExecutor(createExecutor(session));
 			return session;
 		}
 

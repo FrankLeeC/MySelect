@@ -1,6 +1,7 @@
 package com.lwy.myselect.executor;
 
-import java.sql.ResultSet;
+import com.lwy.myselect.mapper.EntityMapper;
+
 import java.sql.SQLException;
 import java.util.List;
 
@@ -12,5 +13,5 @@ public interface Executor {
 
     int update(String sql, List<Object> propertyList) throws SQLException;
 
-    ResultSet query(String sql, List<Object> propertyList) throws SQLException;
+    Object query(String sql, List<Object> propertyList, EntityMapper entityMapper) throws SQLException;
 }

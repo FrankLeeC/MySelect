@@ -310,11 +310,11 @@ public class RealPreparedStatement extends PreparedStatementWrapper {
 
     @Override
     public void close() throws SQLException {
-        if(physicalResultSet != null || !physicalResultSet.isClosed()) {
+        if(physicalResultSet != null) {
             physicalResultSet.close();
             physicalResultSet = null;
         }
-        if(physicalStatement != null || !physicalStatement.isClosed()){
+        if(physicalStatement != null){
             physicalStatement.close();
             physicalStatement = null;
         }

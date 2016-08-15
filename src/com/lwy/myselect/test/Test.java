@@ -1,19 +1,18 @@
 package com.lwy.myselect.test;
 
+import com.lwy.myselect.entity.Entity;
+import com.lwy.myselect.mapper.Configuration;
+import com.lwy.myselect.mapper.parser.XMLParser;
+import com.lwy.myselect.session.Session;
+import com.lwy.myselect.session.SessionFactory;
+import org.xml.sax.SAXException;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import com.lwy.myselect.session.Session;
-import com.lwy.myselect.session.SimpleSession;
-import com.lwy.myselect.session.SessionFactory;
-import com.lwy.myselect.entity.Entity;
-import com.lwy.myselect.mapper.Configuration;
-import com.lwy.myselect.mapper.parser.XMLParser;
-import org.xml.sax.SAXException;
 
 public class Test {
 
@@ -41,7 +40,7 @@ public class Test {
 		Entity e = new Entity();
 		e.setInte(5);
 		Session session2 = sf.getCurrentSession(Entity.class);
-		System.out.println(session2.hashCode()+"      "+session2.getConnection().hashCode());
+//		System.out.println(session2.hashCode()+"      "+((BaseSession)session2).getConnection().hashCode());
 		List<Object> list2 = (List<Object>) session2.select("selectEntity", e);
 		for(int i=0;i<list2.size();i++){
 			System.out.println(list2.get(i));
@@ -49,7 +48,7 @@ public class Test {
 		sf.closeSession(session2);
 		System.out.println("=============");
 		Session session3 = sf.getCurrentSession(Entity.class);
-		System.out.println(session3.hashCode()+"      "+session3.getConnection().hashCode());
+//		System.out.println(session3.hashCode()+"      "+session3.getConnection().hashCode());
 		List<Object> list3 = (List<Object>) session3.select("selectEntity", e);
 		for(int i=0;i<list3.size();i++){
 			System.out.println(list3.get(i));
@@ -87,7 +86,7 @@ public class Test {
 	@SuppressWarnings("unchecked")
 	private static void select(SessionFactory sf){
 		Session session1 = sf.getCurrentSession(Entity.class);
-		System.out.println(session1.hashCode()+"      "+session1.getConnection().hashCode());
+//		System.out.println(session1.hashCode()+"      "+session1.getConnection().hashCode());
 		Entity e = new Entity();
 		e.setInte(5);
 		List<Object> list = (List<Object>) session1.select("selectEntityStr", e);
@@ -97,7 +96,7 @@ public class Test {
 		sf.closeSession(session1);
 		System.out.println("==================");
 		Session session2 = sf.getCurrentSession(Entity.class);
-		System.out.println(session2.hashCode()+"      "+session2.getConnection().hashCode());
+//		System.out.println(session2.hashCode()+"      "+session2.getConnection().hashCode());
 		List<Object> list2 = (List<Object>) session2.select("selectEntity", e);
 		for(int i=0;i<list2.size();i++){
 			System.out.println(list2.get(i));
@@ -105,13 +104,13 @@ public class Test {
 		sf.closeSession(session2);
 		System.out.println("==================");
 		Session session3 = sf.getCurrentSession(Entity.class);
-		System.out.println(session3.hashCode()+"      "+session3.getConnection().hashCode());
+//		System.out.println(session3.hashCode()+"      "+session3.getConnection().hashCode());
 		long count = (long) session3.select("selectCountEntity", e);
 		System.out.println(count);
 		sf.closeSession(session3);
 		System.out.println("==================");
 		Session session4 = sf.getCurrentSession(Entity.class);
-		System.out.println(session4.hashCode()+"      "+session4.getConnection().hashCode());
+//		System.out.println(session4.hashCode()+"      "+session4.getConnection().hashCode());
 		long count2 = (long) session4.select("selectCountSpecialEntity", e);
 		System.out.println(count2);
 		sf.closeSession(session4);

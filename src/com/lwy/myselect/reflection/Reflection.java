@@ -13,6 +13,7 @@ public class Reflection {
 	 * @param sqlStatement sql语句
 	 * @param object 实例对象
 	 * @param clazz 实体对象的类对象
+	 * @param entityMapper  该对象的映射
 	 * @return List<Object>  属性值的集合
 	 */
 	public static List<Object> reflectToGetProperty(String sqlStatement, Object object, Class<?> clazz, EntityMapper 																								entityMapper){
@@ -44,7 +45,7 @@ public class Reflection {
 	/**
 	 * 解析sql
 	 * @param sql  sql
-	 * @return   list which only contains column names
+	 * @return   a list which only contains column names
      */
 	private static List<String> splitSQL(String sql){
 		List<String> list = new ArrayList<>();
@@ -111,7 +112,7 @@ public class Reflection {
 	}
 	
 	/**
-	 * 根据sql返回类型，得到字段名
+	 * 根据sql得到查询返回的字段名
 	 * 如果是select * 则返回全部字段，否则返回指定字段
 	 * @param sqlStatement  sql
 	 * @param entityMapper 返回类型对应的实体映射
@@ -157,6 +158,7 @@ public class Reflection {
 				for(Method m:methods){
 					if(("set"+property).equalsIgnoreCase(m.getName())){
 						m.invoke(object,propertyList.get(i));
+						break;
 					}
 				}
 			}

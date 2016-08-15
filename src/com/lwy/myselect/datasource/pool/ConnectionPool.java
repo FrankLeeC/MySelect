@@ -35,9 +35,9 @@ public class ConnectionPool {
 	}
 	
 	private static void closeConnection(Connection con){
-		if(con != null)
 			try {
-				con.close();
+				if(con != null)
+					con.close();
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -45,9 +45,9 @@ public class ConnectionPool {
 	}
 	
 	public static void closeConnection(Connection con , Statement statement){
-		if(statement != null)
 			try {
-				statement.close();
+				if(statement != null)
+					statement.close();
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

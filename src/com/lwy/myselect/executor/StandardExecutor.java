@@ -1,8 +1,16 @@
 package com.lwy.myselect.executor;
 
+import com.lwy.myselect.datasource.pool.ConnectionPool;
+import com.lwy.myselect.mapper.Configuration;
+import com.lwy.myselect.mapper.EntityMapper;
+import com.lwy.myselect.reflection.Reflection;
+import com.lwy.myselect.resultset.ResultHandler;
 import com.lwy.myselect.session.Session;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 
 /**
@@ -13,22 +21,44 @@ public class StandardExecutor implements Executor{
 
     private Session session;
     private Connection connection;
+//    private Configuration configuration;
+    private ResultHandler resultHandler;
 
     public StandardExecutor(Session session, Connection connection) {
         this.session = session;
         this.connection = connection;
+//        this.configuration = configuration;
     }
 
-    public ResultSet query(String sql, List<Object> propertyList) throws SQLException {
+    /**
+     *
+     * @param sql             sql
+     * @param propertyList    属性值
+     * @param entityMapper    返回的对象的映射
+     * @return
+     * @throws SQLException
+     */
+    public Object query(String sql, List<Object> propertyList, EntityMapper entityMapper) throws SQLException {
         checkConnection();
-        PreparedStatement statement = preparedStatement(connection,propertyList,sql);
-        return statement.executeQuery();
+        if(propertyList.size()>0) {        //有条件的查询
+            PreparedStatement statement = preparedStatement(connection, propertyList, sql);
+            ResultSet resultSet =  statement.executeQuery();
+            resultHandler = new ResultHandler(entityMapper,resultSet);
+            List<String> columns = Reflection.reflectToGetColumn(sql,entityMapper);
+            return resultHandler.handlerResult(columns,entityMapper.getClassName());
+        }
+        else {
+
+        }
+        return null;
     }
 
     public int update(String sql, List<Object> propertyList) throws SQLException {
         checkConnection();
         PreparedStatement statement = preparedStatement(connection,propertyList,sql);
-        return statement.executeUpdate();
+        int result = statement.executeUpdate();
+        ConnectionPool.closeConnection(connection,statement);           //close and release resource
+        return result;
     }
 
     private PreparedStatement preparedStatement(Connection connection,List<Object> propertyList, String sql) throws SQLException {
@@ -41,6 +71,6 @@ public class StandardExecutor implements Executor{
 
     private void checkConnection(){
         if(connection == null)
-            throw new NullPointerException("connection has closed");
+            throw new NullPointerException("connection is null, maybe it is closed");
     }
 }
