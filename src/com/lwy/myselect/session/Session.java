@@ -1,8 +1,6 @@
 package com.lwy.myselect.session;
 
 
-import java.sql.Connection;
-
 /**
  * Session
  * Created by frank lee on 2016/7/26.
@@ -12,7 +10,7 @@ public interface Session {
 
     Class<?> getClazz();
 
-    Connection getConnection();
+//    Connection getConnection();
 
     /**
      * 如果是current session(thread local)返回true,否则false

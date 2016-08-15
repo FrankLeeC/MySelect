@@ -205,7 +205,7 @@ public class XMLParser {
     }
 
     /**
-     * 通过xml解析sql
+     * 通过xml解析sql    Entity.sql.xml
      * @param root   root
      * @return    sql mapper list
      */

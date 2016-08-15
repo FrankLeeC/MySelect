@@ -6,7 +6,7 @@ import java.sql.*;
 /**
  * Created by frank lee on 2016/8/10.
  */
-public class RealStatement implements StatementWrapper {
+public class RealStatement extends StatementWrapper {
 
     private Statement physicalStatement;
     private Connection realConnection;
@@ -20,7 +20,7 @@ public class RealStatement implements StatementWrapper {
 
     @Override
     public ResultSet executeQuery(String sql) throws SQLException {
-        physicalResultSet = physicalStatement.executeQuery(sql);;
+        physicalResultSet = physicalStatement.executeQuery(sql);
         return physicalResultSet;
     }
 
@@ -169,7 +169,7 @@ public class RealStatement implements StatementWrapper {
 
     @Override
     public ResultSet getGeneratedKeys() throws SQLException {
-        return physicalStatement.getGeneratedKeys();
+        return physicalResultSet = physicalStatement.getGeneratedKeys();
     }
 
     @Override

@@ -98,8 +98,6 @@ public class Reflection {
 	/*
 	 * 根据sql中的字段名获取到对应的对象属性
 	 * 如user_name(column) --->  name(property)
-	 * @param propertiesInSql sql中的字段
-	 * @param clazz
 	 * @return 返回属性数组
 	 *
 	 */

@@ -19,7 +19,7 @@ public final class SessionFactory {
 
 	public Session getSession(Class<?> clazz){
 		Connection connection = ConnectionPool.getConnection(configuration.getPoolType(),configuration.getOption());
-		Session session = new SimpleSession.Builder().clazz(clazz)
+		BaseSession session = new SimpleSession.Builder().clazz(clazz)
 													.configuration(configuration)
 													.sessionFactory(this)
 													.connection(connection)
@@ -32,10 +32,10 @@ public final class SessionFactory {
 //	}
 
 	public Session getCurrentSession(Class<?> clazz){
-		Session session = local.get();
+		BaseSession session = (BaseSession) local.get();
 		if(session == null){
 			Connection connection = ConnectionPool.getConnection(configuration.getPoolType(),configuration.getOption()); //这里已经修改为数据库连接池
-			Session simpleSession = new SimpleSession.Builder(true).clazz(clazz)
+			BaseSession simpleSession = new SimpleSession.Builder(true).clazz(clazz)
 																	.connection(connection)
 																	.configuration(configuration)
 																	.sessionFactory(this).build();

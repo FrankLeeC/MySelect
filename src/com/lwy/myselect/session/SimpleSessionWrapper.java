@@ -7,11 +7,11 @@ import java.sql.Connection;
  * Created by frank lee on 2016/7/26.
  * Email: frankleecsz@gmail.com
  */
-public class SimpleSessionWrapper implements Session{
+public class SimpleSessionWrapper extends BaseSession{
 
-    private Session session;
+    private BaseSession session;
 
-    protected SimpleSessionWrapper(Session session) {
+    protected SimpleSessionWrapper(BaseSession session) {
         this.session = session;
     }
 

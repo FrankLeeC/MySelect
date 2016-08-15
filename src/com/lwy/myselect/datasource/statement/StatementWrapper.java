@@ -5,5 +5,5 @@ import java.sql.Statement;
 /**
  * Created by frank lee on 2016/8/10.
  */
-public interface StatementWrapper extends Statement {
+public abstract class StatementWrapper implements Statement {
 }

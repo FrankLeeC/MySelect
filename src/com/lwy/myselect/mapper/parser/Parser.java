@@ -73,9 +73,10 @@ class Parser {
                 String t = evalAttribute(sqlElement,"timeout");
                 String time = (t == null || "".equalsIgnoreCase(t))? "0" : t;
                 int timeout = Integer.valueOf(time);
-                String returnAlias = evalAttribute(sqlElement,"return");
-               list.add(new SQLMapper.Builder().id(id).sql(sql).timeout(timeout)
-                        .returnAlias(returnAlias).build());
+                String rt = evalAttribute(sqlElement,"return");
+                //有个漏洞，return没写的话是"",现修改为int
+                String returnAlias = (rt == null || "".equalsIgnoreCase(rt)) ? "int" : rt;
+               list.add(new SQLMapper.Builder().id(id).sql(sql).timeout(timeout).returnAlias(returnAlias).build());
             }
         }
         return list;

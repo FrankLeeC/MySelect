@@ -12,7 +12,7 @@
 		</option>
 	</datasource>
 
-	<annotation> <!--sql=true 这表示sql使用注解配置-->
+	<annotation> <!--sql=true 这表示sql使用注解配置  文件名为XXXSqlMapper,固定搭配-->
 		<entity>
 			<value>com/lwy/myselect/entity</value>
 		</entity>
@@ -25,7 +25,7 @@
 		<entity strategy="FIFO">com/lwy/myselect/entity</entity>
 	</cache>
 
-	<!--这表示sql使用xml配置-->
+	<!--这表示sql使用xml配置，前提是annotation中的sql属性为false或者不配置-->
 	<!--<sql>
 		<value>com/lwy/myselect/sql</value>
 	</sql>-->

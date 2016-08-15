@@ -14,7 +14,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class SimpleSession implements Session{
+public final class SimpleSession extends BaseSession{
 
 	private boolean current = false;
 	private boolean transaction = false;
@@ -55,7 +55,7 @@ public final class SimpleSession implements Session{
 	}
 
 	@Override
-	public Connection getConnection() {
+	protected Connection getConnection() {
 		return connection;
 	}
 
