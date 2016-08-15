@@ -12,6 +12,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -57,7 +59,8 @@ class Parser {
         return null;
     }
 
-    SQLMapper evalSql(Element root, String type){
+    List<SQLMapper> evalSql(Element root, String type){
+        List<SQLMapper> list = new ArrayList<>();
         NodeList insertList =evalNodeList(root,type,NodeType.ELEMENT);
         if(insertList != null && insertList.getLength()>0) {
             int insertLen = insertList.getLength();
@@ -68,14 +71,14 @@ class Parser {
                 if (!sql.endsWith(";"))
                     sql = sql + ";";
                 String t = evalAttribute(sqlElement,"timeout");
-                String time = t == null? "0" : t;
+                String time = (t == null || "".equalsIgnoreCase(t))? "0" : t;
                 int timeout = Integer.valueOf(time);
                 String returnAlias = evalAttribute(sqlElement,"return");
-                return new SQLMapper.Builder().id(id).sql(sql).timeout(timeout)
-                        .returnAlias(returnAlias).build();
+               list.add(new SQLMapper.Builder().id(id).sql(sql).timeout(timeout)
+                        .returnAlias(returnAlias).build());
             }
         }
-        return null;
+        return list;
     }
 
     NodeList evalChileNodes(Node node){

@@ -12,7 +12,7 @@
 		</option>
 	</datasource>
 
-	<annotation sql="true"> <!--这表示sql使用注解配置-->
+	<annotation> <!--sql=true 这表示sql使用注解配置-->
 		<entity>
 			<value>com/lwy/myselect/entity</value>
 		</entity>
@@ -30,5 +30,5 @@
 		<value>com/lwy/myselect/sql</value>
 	</sql>-->
 
-	<!--<resource type="com.lwy.myselect.entity.Entity" alias="entity" location="com/lwy/myselect/entity/Entity.xml"/>-->
+	<resource type="com.lwy.myselect.entity.Entity" alias="entity" location="com/lwy/myselect/entity/Entity.xml"/>
 </mapper>

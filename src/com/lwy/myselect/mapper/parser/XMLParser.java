@@ -211,10 +211,10 @@ public class XMLParser {
      */
     private List<SQLMapper> parseSqlXml(Element root){
         List<SQLMapper> sqlMapperList = new ArrayList<>();
-        sqlMapperList.add(parser.evalSql(root,"insert"));
-        sqlMapperList.add(parser.evalSql(root,"delete"));
-        sqlMapperList.add(parser.evalSql(root,"update"));
-        sqlMapperList.add(parser.evalSql(root,"select"));
+        sqlMapperList.addAll(parser.evalSql(root,"insert"));
+        sqlMapperList.addAll(parser.evalSql(root,"delete"));
+        sqlMapperList.addAll(parser.evalSql(root,"update"));
+        sqlMapperList.addAll(parser.evalSql(root,"select"));
         return sqlMapperList;
     }
 
@@ -330,7 +330,7 @@ public class XMLParser {
                     }
                     else{                 //sql使用xml配置
                         int index = className.lastIndexOf(".");
-                        String path = (className.substring(0,index) + "." + className.substring(index+1))
+                        String path = "src/" + (className.substring(0,index) + "." + className.substring(index+1))
                                 .replaceAll("\\.","/") + ".sql.xml";
                         Document sqlMapperDocument;
                         try{
