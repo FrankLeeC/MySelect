@@ -25,169 +25,167 @@ import java.util.*;
  * Email: frankleecsz@gmail.com
  */
 public class XMLParser {
-    private static DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-    private static DocumentBuilder db;
-    private static List<String> entityPackageList;  //entity 所在的包    使用注解
-    private static Map<String,String> locations;  //resource 所在处        使用配置文件
-    private static boolean parsed = false;       //是否已经解析过
-    private static Configuration configuration;
-    private static boolean annotation = false;    //是否使用注解
-    private static boolean sqlAnnotation = false; //sql是否使用注解
+    private Parser parser;
+    private List<String> entityPackageList;  //entity 所在的包    使用注解
+    private Map<String,String> locations;  //resource 所在处        使用配置文件
+    private boolean parsed = false;       //是否已经解析过
+    private Configuration configuration;
+    private boolean annotation = false;    //是否使用注解
+    private boolean sqlAnnotation = false; //sql是否使用注解
 
-    public static Configuration parse(){
+    public XMLParser(){
+        try {
+            parser = new Parser();
+        } catch (ParserConfigurationException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public Configuration parse() throws IOException, SAXException {
         if(!parsed){
-            try {
-                db = dbf.newDocumentBuilder();
-                configuration = new Configuration();
-                parseConfig();
-                if(!annotation){ //if don't use annotation
-                    parseEntityXml(); //该配置包含类名，属性名，属性类型，字段名，字段类型，策略,sql等信息
-                }
-                else{ // if use annotation
-                    parseEntityAnnotation();
-                }
-                parsed = true;
-            } catch (ParserConfigurationException e) {
-                e.printStackTrace();
+            configuration = new Configuration();
+            parseConfig();
+            if(!annotation){ //if don't use annotation
+                parseEntityXml(); //该配置包含类名，属性名，属性类型，字段名，字段类型，策略,sql等信息
             }
+            else{ // if use annotation
+                parseEntityAnnotation();
+            }
+            parsed = true;
         }
         return configuration;
+    }
+
+    /**
+     * 如果没有配置，则使用默认的，不报错
+     * @param pool node pool
+     */
+    private void registerPoolType(Node pool){
+        if(pool != null)
+            configuration.registerPoolType(pool.getTextContent());
+        else
+            configuration.registerPoolType("default");
+    }
+
+    /**
+     * 如果没有配置，则使用默认的，不报错    configuration在获取option时，如果是null,则新建默认的option
+     * @param dataSource node dataSource
+     */
+    private void registerDataSource(Node dataSource){
+        if(dataSource != null){
+            Element dataSourceElement = (Element) dataSource;
+            Element optionElement = (Element) parser.evalNode(dataSourceElement,"option",NodeType.ELEMENT);
+            String name = parser.evalAttribute(optionElement,"name");
+            Option option = new Option(name);
+            NodeList list = parser.evalChileNodes(optionElement);
+            Properties properties = parser.evalAttributeValue(list);
+            option.registerProperties(properties);
+            configuration.registerOption(option);
+        }
+    }
+
+    private void registerAnnotationOrXml(Node annotationNode,Element root){
+        if(annotationNode != null){             //if use annotation configuration
+            annotation = true;
+            Element entityPackageElement = (Element) parser.evalNode(annotationNode,"entity",NodeType.ELEMENT);
+            String sqlAnnotationStr = parser.evalAttribute((Element) annotationNode,"sql");
+            if(sqlAnnotationStr !=null && "true".equalsIgnoreCase(sqlAnnotationStr))
+                sqlAnnotation = true;
+            NodeList entityPackageNodeList = parser.evalChileNodes(entityPackageElement);
+            int len = entityPackageNodeList.getLength();
+            entityPackageList = new ArrayList<>();          //entity 所在的包    使用注解
+            for (int i = 0; i < len; i++) {
+                Object node = entityPackageNodeList.item(i);
+                if(node instanceof Element){
+                    Element entityPackage = (Element) node;
+                    entityPackageList.add(parser.evalContent(entityPackage));
+                }
+            }
+        }
+        else{
+            locations = new HashMap<>();  //resource 所在处        使用配置文件
+            NodeList resourceList = parser.evalNodeList(root,"resource",NodeType.ELEMENT);
+            int aliasLen = resourceList.getLength();
+            for (int i = 0; i < aliasLen; i++) {
+                Element entity = (Element) resourceList.item(i);
+                String className = parser.evalAttribute(entity,"type");
+                String aliasName = parser.evalAttribute(entity,"alias");
+                configuration.registerAlias(aliasName,className);
+                String location = parser.evalAttribute(root,"location");
+                locations.put(className,location);
+            }
+
+        }
+    }
+
+    private void registerCache(Node cacheNode){
+        if(cacheNode != null){
+            NodeList list = parser.evalNodeList(cacheNode,"entity",NodeType.ELEMENT);
+            if(list != null && list.getLength() > 0){
+                int len = list.getLength();
+                for (int i = 0; i < len; i++) {
+                    Element entityCache = (Element) list.item(i);
+                    String strategy = parser.evalAttribute(entityCache,"strategy");
+                    String className = parser.evalContent(entityCache);
+                    configuration.registerCacheStrategy(className,strategy);
+                }
+            }
+        }
     }
 
     /**
      * parse config.xml
      * 该配置包含类名，别名，资源配置地址,数据源配置
      */
-    private static void parseConfig(){
-        try{
-            Document document = db.parse(new File("src/config.xml"));
-            NodeList nl = document.getElementsByTagName("mapper");
-            Element root = (Element) nl.item(0);
-            NodeList poolList = root.getElementsByTagName("connectionpool");
-            if(poolList != null){
-               configuration.registerPoolType(poolList.item(0).getTextContent());
-            }
-            else{
-                configuration.registerPoolType("default");
-            }
-            NodeList dataSourceList = root.getElementsByTagName("datasource");
-            if(dataSourceList != null && dataSourceList.getLength()>0){
-                Element dataSource = (Element) dataSourceList.item(0);
-                NodeList options = dataSource.getElementsByTagName("option");
-                if(options != null && options.getLength()>0){
-                    Element option = (Element) options.item(0);
-                    String name = option.getAttribute("name");
-                    Option op = new Option(name);
-                    NodeList properties = option.getChildNodes();
-                    int propertyNum = properties.getLength();
-                    for(int j=0;j<propertyNum;j++){
-                        Node node = properties.item(j);
-                        if( node instanceof Element){
-                            Element property = (Element) node;
-                            String propertyName = property.getAttribute("name");
-                            String value = property.getTextContent();
-                            op.registerOption(propertyName,value);
-                        }
-                    }
-                    configuration.registerOption(op);
-                }
-            }
-
-            NodeList annotationList = root.getElementsByTagName("annotation");
-            if(annotationList != null && annotationList.getLength()>0){          //if use annotation configuration
-                entityPackageList = new ArrayList<>();  //entity 所在的包    使用注解
-                annotation = true;
-                Element configTypeElement = (Element) annotationList.item(0);
-                Element entityPackageElement = (Element) configTypeElement.getElementsByTagName("entity").item(0);
-                NodeList entityPackageNodeList = entityPackageElement.getChildNodes();
-                for(int i=0;i<entityPackageNodeList.getLength();i++){
-                    Object o = entityPackageNodeList.item(i);
-                    if(o instanceof Element){
-                        Element value = (Element) o;
-                        entityPackageList.add(value.getTextContent());
-                    }
-                }
-                String sqlAnnotationStr = configTypeElement.getAttribute("sql");
-                if(sqlAnnotationStr != null && "true".equalsIgnoreCase(sqlAnnotationStr)){     // sql使用注解配置
-                    sqlAnnotation = true;
-                }
-            }
-
-            else{                             //if use xml configuration
-                locations = new HashMap<>();  //resource 所在处        使用配置文件
-                NodeList resourceList = root.getElementsByTagName("resource");
-                int aliasLen = resourceList.getLength();
-                for(int i=0;i<aliasLen;i++){
-                    Element entity = (Element) resourceList.item(i);
-                    String className = entity.getAttribute("type");
-                    String aliasName = entity.getAttribute("alias");
-                    configuration.registerAlias(aliasName,className);
-                    String location = entity.getAttribute("location");
-                    locations.put(className,location);
-                }
-            }
-
-            NodeList cacheList = root.getElementsByTagName("cache");
-            if(cacheList != null && cacheList.getLength()>0){      //使用cache
-                Element cacheElements = (Element) cacheList.item(0);
-                NodeList entityList = cacheElements.getElementsByTagName("entity");
-                if(entityList != null && entityList.getLength()>0){
-                    for(int i=0;i<entityList.getLength();i++){
-                        Element entity = (Element) entityList.item(i);
-                        String strategy = entity.getAttribute("keyStrategy");
-                        String className = entity.getTextContent();
-                        configuration.registerKeyStrategy(className,strategy);
-                    }
-                }
-            }
-        } catch(Exception e){
-            e.printStackTrace();
-        }
+    private void parseConfig() throws IOException, SAXException {
+        Document document = parser.createDocument("src/config.xml");
+        Element root = (Element) parser.evalNode(document,"mapper",NodeType.DOCUMENT);
+        registerPoolType(parser.evalNode(root,"connectionpool",NodeType.ELEMENT));
+        registerDataSource(parser.evalNode(root,"datasource",NodeType.ELEMENT));
+        registerAnnotationOrXml(parser.evalNode(root,"annotation",NodeType.ELEMENT),root);
+        registerCache(parser.evalNode(root,"cache",NodeType.ELEMENT));
     }
 
     /**
      * 通过xml配置实体类和sql
      */
-    private static void parseEntityXml(){
+    private void parseEntityXml(){
         Iterator<String> iterator = locations.keySet().iterator();
         while(iterator.hasNext()){
             String location = "src/" + locations.get(iterator.next());
             try {
-                Document document = db.parse(new File(location));
-                NodeList nl = document.getElementsByTagName("config");
-                Element root = (Element) nl.item(0);
-                //parse property
-                NodeList entityList = root.getElementsByTagName("entity");
-                Element entity = (Element) entityList.item(0);
-                String alias = entity.getAttribute("name");
-                String className = entity.getAttribute("class");
-                String tableName = entity.getAttribute("table");
+                Document document = parser.createDocument(location);
+                Element root = (Element) parser.evalNode(document,"config",NodeType.DOCUMENT);
+                Element entity = (Element) parser.evalNode(root,"entity",NodeType.ELEMENT);
+                String alias = parser.evalAttribute(entity,"name");
+                String className = parser.evalAttribute(entity,"class");
+                String tableName = parser.evalAttribute(entity,"table");
                 String strategy = null;
                 String key = null;
                 List<PropertyMapper> propertyMapperList = new ArrayList<>();
                 EntityMapper.Builder eb = new EntityMapper.Builder().alias(alias).className(className).table(tableName);
                 EntityMapper entityMapper;
-                NodeList propertyNodeList = entity.getChildNodes();
+                NodeList propertyNodeList = parser.evalChileNodes(entity);
                 for(int j=0;j<propertyNodeList.getLength();j++){
                     Node n = propertyNodeList.item(j);
                     if(n instanceof Element){
                         Element property = (Element) n;
                         if("id".equals(property.getNodeName())){    //id主键
-                            String name = property.getAttribute("name");
+                            String name = parser.evalAttribute(property,"name");
                             key = name;
-                            String column = property.getAttribute("column");
-                            String type = property.getAttribute("javaType");
+                            String column = parser.evalAttribute(property,"column");
+                            String type = parser.evalAttribute(property,"javaType");
                             Class<?> classType = configuration.getClass(type);
-                            strategy = property.getAttribute("keyStrategy"); //主键策略
+                            strategy = parser.evalAttribute(property,"strategy"); //主键策略
                             PropertyMapper propertyMapper = new PropertyMapper.Builder().name(name)
                                     .column(column).type(classType).build();
                             propertyMapperList.add(propertyMapper);
                         }
                         else{
-                            String name = property.getAttribute("name");
-                            String column = property.getAttribute("column");
-                            String nullable = property.getAttribute("not-null");
-                            String type = property.getAttribute("javaType");
+                            String name = parser.evalAttribute(property,"name");
+                            String column = parser.evalAttribute(property,"column");
+                            String nullable = parser.evalAttribute(property,"not-null");
+                            String type = parser.evalAttribute(property,"javaType");
                             Class<?> classType = configuration.getClass(type);
                             PropertyMapper propertyMapper = new PropertyMapper.Builder().name(name)
                                     .column(column).nullable(Boolean.valueOf(nullable)).type(classType).build();
@@ -211,86 +209,19 @@ public class XMLParser {
      * @param root   root
      * @return    sql mapper list
      */
-    private static List<SQLMapper> parseSqlXml(Element root){
+    private List<SQLMapper> parseSqlXml(Element root){
         List<SQLMapper> sqlMapperList = new ArrayList<>();
-        NodeList insertList = root.getElementsByTagName("insert");
-        if(insertList != null && insertList.getLength()>0) {
-            int insertLen = insertList.getLength();
-            for (int i = 0; i < insertLen; i++) {
-                Element sqlElement = (Element) insertList.item(i);
-                String id = sqlElement.getAttribute("id");
-                String sql = sqlElement.getTextContent().trim();
-                if (!sql.endsWith(";"))
-                    sql = sql + ";";
-                String time = sqlElement.getAttribute("timeout") == null? "0" : sqlElement.getAttribute("timeout");
-                int timeout = Integer.valueOf(time);
-                String returnAlias = sqlElement.getAttribute("return");
-                SQLMapper sqlMapper = new SQLMapper.Builder().id(id).sql(sql).timeout(timeout)
-                        .returnAlias(returnAlias).build();
-                sqlMapperList.add(sqlMapper);
-            }
-        }
-
-        NodeList deleteList = root.getElementsByTagName("delete");
-        if(deleteList != null && deleteList.getLength()>0){
-            int deleteLen = deleteList.getLength();
-            for(int i=0;i<deleteLen;i++){
-                Element sqlElement = (Element) deleteList.item(i);
-                String id = sqlElement.getAttribute("id");
-                String time = sqlElement.getAttribute("timeout") == null? "0" : sqlElement.getAttribute("timeout");
-                int timeout = Integer.valueOf(time);
-                String returnAlias = sqlElement.getAttribute("return");
-                String sql = sqlElement.getTextContent().trim();
-                if(!sql.endsWith(";"))
-                    sql = sql + ";";
-                SQLMapper sqlMapper = new SQLMapper.Builder().id(id).timeout(timeout)
-                        .returnAlias(returnAlias).sql(sql).build();
-                sqlMapperList.add(sqlMapper);
-            }
-        }
-
-        NodeList updateList = root.getElementsByTagName("update");
-        if(updateList != null && updateList.getLength()>0){
-            int updateLen = updateList.getLength();
-            for(int i=0;i<updateLen;i++){
-                Element sqlElement = (Element) updateList.item(i);
-                String id = sqlElement.getAttribute("id");
-                String sql = sqlElement.getTextContent().trim();
-                if(!sql.endsWith(";"))
-                    sql = sql + ";";
-                String time = sqlElement.getAttribute("timeout") == null? "0" : sqlElement.getAttribute("timeout");
-                int timeout = Integer.valueOf(time);
-                String returnAlias = sqlElement.getAttribute("return");
-                SQLMapper sqlMapper = new SQLMapper.Builder().id(id).sql(sql).timeout(timeout)
-                        .returnAlias(returnAlias).build();
-                sqlMapperList.add(sqlMapper);
-            }
-        }
-
-        NodeList selectList = root.getElementsByTagName("select");
-        if(selectList != null && selectList.getLength()>0){
-            int selectLen = selectList.getLength();
-            for(int i=0;i<selectLen;i++){
-                Element sqlElement = (Element) selectList.item(i);
-                String id = sqlElement.getAttribute("id");
-                String returnType = sqlElement.getAttribute("return");
-                String sql = sqlElement.getTextContent().trim();
-                if(!sql.endsWith(";"))
-                    sql = sql + ";";
-                String time = sqlElement.getAttribute("timeout") == null? "0" : sqlElement.getAttribute("timeout");
-                int timeout = Integer.valueOf(time);
-                SQLMapper sqlMapper = new SQLMapper.Builder().id(id).sql(sql).timeout(timeout)
-                        .returnAlias(returnType).build();
-                sqlMapperList.add(sqlMapper);
-            }
-        }
+        sqlMapperList.add(parser.evalSql(root,"insert"));
+        sqlMapperList.add(parser.evalSql(root,"delete"));
+        sqlMapperList.add(parser.evalSql(root,"update"));
+        sqlMapperList.add(parser.evalSql(root,"select"));
         return sqlMapperList;
     }
 
     /**
      * 通过注解解析实体类和sql
      */
-    private static void parseEntityAnnotation(){
+    private void parseEntityAnnotation(){
         List<String> entityPathList = new ArrayList<>();
         for(String str:entityPackageList){ //get all class name
             GetClass gc = new GetClass();
@@ -343,7 +274,7 @@ public class XMLParser {
                     Cache cache = clazz.getDeclaredAnnotation(Cache.class);
                     if(cache != null){
                         String cacheStrategy = cache.value();
-                        configuration.registerKeyStrategy(className,cacheStrategy);
+                        configuration.registerCacheStrategy(className,cacheStrategy);
                     }
 
                     List<SQLMapper> sqlMapperList;
@@ -403,7 +334,7 @@ public class XMLParser {
                                 .replaceAll("\\.","/") + ".sql.xml";
                         Document sqlMapperDocument;
                         try{
-                            sqlMapperDocument = db.parse(new File(path));
+                            sqlMapperDocument = parser.createDocument(path);
                         } catch (SAXException | IOException e){
                             continue;   //说明当前实例没有配置sql
                         }

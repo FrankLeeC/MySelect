@@ -1,5 +1,6 @@
 package com.lwy.myselect.test;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -12,12 +13,20 @@ import com.lwy.myselect.session.SessionFactory;
 import com.lwy.myselect.entity.Entity;
 import com.lwy.myselect.mapper.Configuration;
 import com.lwy.myselect.mapper.parser.XMLParser;
+import org.xml.sax.SAXException;
 
 public class Test {
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		Configuration configuration = XMLParser.parse();
+		Configuration configuration = null;
+		try {
+			configuration = new XMLParser().parse();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (SAXException e) {
+			e.printStackTrace();
+		}
 		SessionFactory sf = new SessionFactory(configuration);
 //		insert(sf);
 //		delete(sf);

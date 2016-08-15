@@ -22,7 +22,6 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class Configuration {
     private Option option;
-    private Option defaultOption;
     private Map<String,EntityMapper> entityMappers = new ConcurrentHashMap<>();
     private Map<String,String> aliases = new ConcurrentHashMap<>();
     private Map<String,String> strategies = new HashMap<>();
@@ -64,7 +63,7 @@ public class Configuration {
         aliases.put(alias,name);
     }
 
-    public void registerKeyStrategy(String className, String keyStrategy){
+    public void registerCacheStrategy(String className, String keyStrategy){
         strategies.put(className,keyStrategy);
     }
 
@@ -81,7 +80,11 @@ public class Configuration {
     }
 
     public Option getOption(){
-        return option == null ? defaultOption : option;
+        return option == null ? defaultOption() : option;
+    }
+
+    private Option defaultOption(){
+        return null;
     }
 
     public String getPoolType(){

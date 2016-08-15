@@ -16,6 +16,9 @@
 		<entity>
 			<value>com/lwy/myselect/entity</value>
 		</entity>
+		<sql>  <!--如果不在默认的entity包下，则另外声明位置-->
+			<value></value>
+		</sql>
 	</annotation>
 
 	<cache>

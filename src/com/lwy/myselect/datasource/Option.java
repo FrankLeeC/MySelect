@@ -24,6 +24,10 @@ public class Option {
         properties.put(name,value);
     }
 
+    public void registerProperties(Properties properties){
+        this.properties = properties;
+    }
+
     public Properties getProperties(){
         return properties;
     }
