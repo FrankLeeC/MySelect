@@ -143,6 +143,7 @@ public class Reflection {
 	 * @param propertyList  数据查询结果
 	 * @param className  类名
 	 * @param columns 需要查询的字段名，可能是全部，也可能是一部分
+	 * @param entityMapper    要创建的实例的映射
 	 * @return 返回一个实例
 	 */
 	public static Object reflectToCreateEntity(List<Object> propertyList,String className

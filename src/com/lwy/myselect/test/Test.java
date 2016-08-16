@@ -21,9 +21,7 @@ public class Test {
 		Configuration configuration = null;
 		try {
 			configuration = new XMLParser().parse();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (SAXException e) {
+		} catch (IOException | SAXException e) {
 			e.printStackTrace();
 		}
 		SessionFactory sf = new SessionFactory(configuration);
@@ -36,6 +34,7 @@ public class Test {
 		selectSame(sf);
 	}
 
+	@SuppressWarnings("unchecked")
 	private static void selectSame(SessionFactory sf){
 		Entity e = new Entity();
 		e.setInte(5);
@@ -59,10 +58,10 @@ public class Test {
 	private static void insert(SessionFactory sf) {
 		Entity e = new Entity();
 		e.setDate(new Date());
-		e.setDou(95.9);
-		e.setFl(22.6f);
-		e.setLon(908);
-		e.setStr("bbb");
+		e.setDou(893.215);
+		e.setFl(89.7f);
+		e.setLon(598794234);
+		e.setStr("grj");
 		Session session = sf.getSession(Entity.class);
 		session.insert("insertEntity", e);
 	}
@@ -70,7 +69,7 @@ public class Test {
 	private static void delete(SessionFactory sf){
 		Session session = sf.getSession(Entity.class);
 		Entity e = new Entity();
-		e.setInte(5);
+		e.setInte(20);
 		session.delete("deleteEntity", e);
 		sf.closeSession(session);
 	}
@@ -78,7 +77,7 @@ public class Test {
 	private static void update(SessionFactory sf){
 		Session session = sf.getSession(Entity.class);
 		Entity e = new Entity();
-		e.setInte(5);
+		e.setInte(19);
 		e.setDou(6.77);
 		session.update("updateEntity", e);
 	}

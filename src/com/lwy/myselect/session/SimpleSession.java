@@ -16,6 +16,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static javafx.scene.input.KeyCode.T;
+
 public final class SimpleSession extends BaseSession{
 
 	private boolean current = false;
@@ -121,8 +123,8 @@ public final class SimpleSession extends BaseSession{
 
 	@Override
 	public int commit(){
-		if(isTransaction())
-			return insertAndDeleteAndUpdate(singleBatchSql,batchObjectList);
+//		if(isTransaction())
+//			return insertAndDeleteAndUpdate(singleBatchSql,batchObjectList);
 		return 0;
 	}
 	
@@ -138,19 +140,22 @@ public final class SimpleSession extends BaseSession{
 		
 	}
 	
-	@SuppressWarnings("unchecked")
-	private int singleSqlBatch(String sql,Object object){
-		if(!isTransaction())
-			return insertAndDeleteAndUpdate(sql, object);
-		else{
-			singleBatchSql = sql;
-			batchObjectList = (List<Object>) object;
-			return batchObjectList.size();
-		}
-	}
+//	@SuppressWarnings("unchecked")
+//	private int singleSqlBatch(String sql,Object object){
+//		if(!isTransaction())
+//			return insertAndDeleteAndUpdate(sql, object);
+//		else{
+//			singleBatchSql = sql;
+//			batchObjectList = (List<Object>) object;
+//			return batchObjectList.size();
+//		}
+//	}
 
-	@Override
-	public int insert(String sql,Object object){
+	/**
+	 * put in cache after insert
+	 * @param object object inserted
+     */
+	private void putInCache(Object object){
 		String key = configuration.getEntity(clazz.getName()).getKey();
 		Method[] methods = clazz.getDeclaredMethods();
 		for(Method m:methods){
@@ -163,17 +168,42 @@ public final class SimpleSession extends BaseSession{
 				}
 			}
 		}
-		return singleSqlBatch(sql,object);
 	}
 
 	@Override
+	public int insert(String sql,Object object){
+		int result = update(sql,object);
+		if(result > 0){
+			putInCache(object);
+		}
+		return result;
+	}
+
+//	@Override
+//	public int delete(String sql,Object object){
+//		return singleSqlBatch(sql,object);
+//	}
+//
+//	@Override
+//	public int update(String sql,Object object){
+//		return singleSqlBatch(sql,object);
+//	}
+
+	@Override
 	public int delete(String sql,Object object){
-		return singleSqlBatch(sql,object);
+		return update(sql,object);
 	}
 
 	@Override
 	public int update(String sql,Object object){
-		return singleSqlBatch(sql,object);
+		try {
+			return executeUpdate(sql,object);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			close();
+		}
+		return -1;
 	}
 
 	private int executeUpdate(String sql,Object object) throws SQLException {
@@ -193,10 +223,10 @@ public final class SimpleSession extends BaseSession{
 				return result;
 			}
 		}
-		String returnAlias = entityMapper.getSQLMapper(sql).getReturnAlias();
-		String className = configuration.getClassName(returnAlias);
-		EntityMapper returnEntityMapper = configuration.getEntity(className);
-		List<Object> propertyList = Reflection.reflectToGetProperty(sqlStatement, object, clazz,entityMapper);
+		String returnAlias = entityMapper.getSQLMapper(sql).getReturnAlias();               //返回对象的别名
+		String className = configuration.getClassName(returnAlias);                         //返回对象的类名
+		EntityMapper returnEntityMapper = configuration.getEntity(className);               //返回对象的映射
+		List<Object> propertyList = Reflection.reflectToGetProperty(sqlStatement, object, clazz,entityMapper);//属性值，插入sql的问号中
 		return executor.query(sqlStatement,propertyList,returnEntityMapper);
 	}
 
@@ -204,73 +234,73 @@ public final class SimpleSession extends BaseSession{
 		return 0;
 	}
 
-	private int insertAndDeleteAndUpdate(String sql,Object object){
-		int result = 0;
-		EntityMapper entityMapper = configuration.getEntity(clazz.getName());
-		String sqlStatement = entityMapper.getSQLMapper(sql).getSql();
-		List<Object> propertyList = null;
-		List<List<Object>> propertyBatch = null;
-		PreparedStatement ps = null;
-		if(!isTransaction()){
-			propertyList = Reflection.reflectToGetProperty(sqlStatement, object, clazz,entityMapper);
-		}
-		else{
-			propertyBatch = new ArrayList<>();
-			for(int i=0;i<batchObjectList.size();i++){
-				List<Object> property = Reflection.reflectToGetProperty(sqlStatement, batchObjectList.get(i)
-																						, clazz,entityMapper);
-				propertyBatch.add(property);
-			}
-		}
-		if(connection != null){
-			try {
-				if(!isTransaction()){
-					ps = connection.prepareStatement(sqlStatement);
-					for(int i=0;i<propertyList.size();i++)
-						ps.setObject(i+1, propertyList.get(i));
-					result = ps.executeUpdate();
-				}
-				else{
-					connection.setAutoCommit(false);
-					ps = connection.prepareStatement(sqlStatement);
-					for(int j=0;j<batchObjectList.size();j++){
-						List<Object> properties = propertyBatch.get(j);
-						for(int i=0;i<properties.size();i++)
-							ps.setObject(i+1, properties.get(i));
-						ps.addBatch();
-						if(j>0&&j%200 == 0){
-							ps.executeBatch();
-							connection.commit();
-							ps.clearBatch();
-						}
-					}
-					ps.executeBatch();
-					ps.clearBatch();
-					connection.commit();
-					connection.setAutoCommit(true);
-					result = batchObjectList.size();
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-				if(isTransaction()){
-					try {
-						if(connection != null){
-							connection.rollback();
-							connection.setAutoCommit(true);
-						}
-					} catch (Exception e2) {
-						e2.printStackTrace();
-					}
-				}
-			}finally{
-				if(isTransaction())
-					resetBatch(); //重置batchList 和  sql
-				if(ps != null)
-					ConnectionPool.closeConnection(connection, ps);
-			}
-		}
-		return result;
-	}
+//	private int insertAndDeleteAndUpdate(String sql,Object object){
+//		int result = 0;
+//		EntityMapper entityMapper = configuration.getEntity(clazz.getName());
+//		String sqlStatement = entityMapper.getSQLMapper(sql).getSql();
+//		List<Object> propertyList = null;
+//		List<List<Object>> propertyBatch = null;
+//		PreparedStatement ps = null;
+//		if(!isTransaction()){
+//			propertyList = Reflection.reflectToGetProperty(sqlStatement, object, clazz,entityMapper);
+//		}
+//		else{
+//			propertyBatch = new ArrayList<>();
+//			for(int i=0;i<batchObjectList.size();i++){
+//				List<Object> property = Reflection.reflectToGetProperty(sqlStatement, batchObjectList.get(i)
+//																						, clazz,entityMapper);
+//				propertyBatch.add(property);
+//			}
+//		}
+//		if(connection != null){
+//			try {
+//				if(!isTransaction()){
+//					ps = connection.prepareStatement(sqlStatement);
+//					for(int i=0;i<propertyList.size();i++)
+//						ps.setObject(i+1, propertyList.get(i));
+//					result = ps.executeUpdate();
+//				}
+//				else{
+//					connection.setAutoCommit(false);
+//					ps = connection.prepareStatement(sqlStatement);
+//					for(int j=0;j<batchObjectList.size();j++){
+//						List<Object> properties = propertyBatch.get(j);
+//						for(int i=0;i<properties.size();i++)
+//							ps.setObject(i+1, properties.get(i));
+//						ps.addBatch();
+//						if(j>0&&j%200 == 0){
+//							ps.executeBatch();
+//							connection.commit();
+//							ps.clearBatch();
+//						}
+//					}
+//					ps.executeBatch();
+//					ps.clearBatch();
+//					connection.commit();
+//					connection.setAutoCommit(true);
+//					result = batchObjectList.size();
+//				}
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//				if(isTransaction()){
+//					try {
+//						if(connection != null){
+//							connection.rollback();
+//							connection.setAutoCommit(true);
+//						}
+//					} catch (Exception e2) {
+//						e2.printStackTrace();
+//					}
+//				}
+//			}finally{
+//				if(isTransaction())
+//					resetBatch(); //重置batchList 和  sql
+//				if(ps != null)
+//					ConnectionPool.closeConnection(connection, ps);
+//			}
+//		}
+//		return result;
+//	}
 
 	/**
 	 * find in cache
@@ -309,10 +339,31 @@ public final class SimpleSession extends BaseSession{
 		return null;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public Object select(String sql,Object object){
 		try {
-			return executeQuery(sql,object);
+			EntityMapper entityMapper = configuration.getEntity(clazz.getName());
+			Object cached = findInCache(object,entityMapper);
+			if(cached != null) {
+				System.out.println("get in cache");
+				return cached;
+			}
+			Object result = executeQuery(sql,object);
+			String returnAlias = entityMapper.getSQLMapper(sql).getReturnAlias();
+			String className = configuration.getClassName(returnAlias);
+			EntityMapper em = configuration.getEntity(className);
+			if(result instanceof List){
+				List<Object> results = (List<Object>) result;
+				for (Object cacheObj:results) {
+					Object id = Reflection.reflectToGetId(em,cacheObj);
+					//如果id属性不为空，则将其缓存起来
+					if(id != null) {
+						sessionFactory.cache(className, id, cacheObj);
+					}
+				}
+			}
+			return result;
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}

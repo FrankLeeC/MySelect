@@ -21,13 +21,11 @@ public class StandardExecutor implements Executor{
 
     private Session session;
     private Connection connection;
-//    private Configuration configuration;
     private ResultHandler resultHandler;
 
     public StandardExecutor(Session session, Connection connection) {
         this.session = session;
         this.connection = connection;
-//        this.configuration = configuration;
     }
 
     /**
@@ -53,14 +51,27 @@ public class StandardExecutor implements Executor{
         return null;
     }
 
+    /**
+     *
+     * @param sql  sql
+     * @param propertyList   属性值，插入到sql问号
+     * @return   修改的记录数量
+     * @throws SQLException
+     */
     public int update(String sql, List<Object> propertyList) throws SQLException {
         checkConnection();
         PreparedStatement statement = preparedStatement(connection,propertyList,sql);
-        int result = statement.executeUpdate();
-        ConnectionPool.closeConnection(connection,statement);           //close and release resource
-        return result;
+        return statement.executeUpdate();
     }
 
+    /**
+     *
+     * @param connection connection
+     * @param propertyList  属性值，插入到sql问号
+     * @param sql sql
+     * @return  PreparedStatement
+     * @throws SQLException
+     */
     private PreparedStatement preparedStatement(Connection connection,List<Object> propertyList, String sql) throws SQLException {
         PreparedStatement statement = connection.prepareStatement(sql);
         for(int i=0;i<propertyList.size();i++){
