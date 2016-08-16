@@ -1,6 +1,5 @@
 package com.lwy.myselect.session;
 
-import com.lwy.myselect.datasource.pool.ConnectionPool;
 import com.lwy.myselect.executor.Executor;
 import com.lwy.myselect.executor.StandardExecutor;
 import com.lwy.myselect.mapper.Configuration;
@@ -10,13 +9,9 @@ import com.lwy.myselect.reflection.Reflection;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
-import static javafx.scene.input.KeyCode.T;
 
 public final class SimpleSession extends BaseSession{
 
@@ -97,25 +92,13 @@ public final class SimpleSession extends BaseSession{
 	@Override
 	public void close(){
 		if(!closed){
-			if(isCurrent()){
-				try {
-					if(getConnection() != null)
-						getConnection().close();
-					setConnection(null);
-				} catch (SQLException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-			else{
-				try {
-					if(connection != null)
-						connection.close();
-					connection = null;
-				} catch (SQLException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+			try {
+				if(connection != null)
+					connection.close();
+				connection = null;
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 			closed = true;
 		}
