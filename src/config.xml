@@ -1,0 +1,34 @@
+<?xml version='1.0' encoding="utf-8" ?>
+<mapper>
+	<connectionpool>default</connectionpool>  <!--使用默认的连接池，如果使用别的，就写类名-->
+	<datasource>
+		<option name="first">
+			<property name="acquireIncrement">5</property>
+    		<property name="initialPoolSize">15</property>
+    		<property name="minPoolSize">15</property>
+    		<property name="maxPoolSize">60</property>
+    		<property name="maxStatements">10</property>
+    		<property name="maxStatementsPerConnection">5</property>
+		</option>
+	</datasource>
+
+	<annotation> <!--sql=true 这表示sql使用注解配置  文件名为XXXSqlMapper,固定搭配-->
+		<entity>
+			<value>com/lwy/myselect/entity</value>
+		</entity>
+		<sql>  <!--如果不在默认的entity包下，则另外声明位置-->
+			<value></value>
+		</sql>
+	</annotation>
+
+	<cache>
+		<entity strategy="FIFO">com/lwy/myselect/entity</entity>
+	</cache>
+
+	<!--这表示sql使用xml配置，前提是annotation中的sql属性为false或者不配置-->
+	<!--<sql>
+		<value>com/lwy/myselect/sql</value>
+	</sql>-->
+
+	<resource type="com.lwy.myselect.entity.Entity" alias="entity" location="com/lwy/myselect/entity/Entity.xml"/>
+</mapper>
